@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liv'Guinar+</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<header class="app-header">
+    <div class="header-top">
+        <button class="icon-btn">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="brand-title">
+            <span class="sub-welcome">BIENVENUE SUR</span>
+            <h1>Liv'Guinar+</h1>
+        </div>
+
+        <button class="icon-btn">
+            <i class="fa-solid fa-cart-shopping"></i>
+        </button>
+    </div>
+
+    <div class="search-container">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" placeholder="Rechercher un animal...">
+        </div>
+    </div>
+</header>
+
+<main class="main-content">
+
+    <section class="categories-section">
+        <h2 class="section-title">NOS CATÉGORIES</h2>
+        <div class="categories-list">
+            <button class="category-chip active">
+                <span class="chip-emoji">🌿</span> Tout
+            </button>
+            <button class="category-chip">
+                <span class="chip-emoji">🐔</span> Volaille
+            </button>
+            <button class="category-chip">
+                <span class="chip-emoji">🥚</span> Œufs
+            </button>
+            <button class="category-chip">
+                <span class="chip-emoji">🐑</span> Moutons
+            </button>
+            <button class="category-chip">
+                <span class="chip-emoji">🐄</span> Vaches
+            </button>
+        </div>
+    </section>
+
+    <section class="banners-section">
+        <div class="banners-list">
+            
+            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000');">
+                <div class="banner-content">
+                    <h2>🐔 Volaille</h2>
+                    <p class="product-count">3 produits disponibles</p>
+                    <p class="starting-price">À partir de 3 000 FCFA/kg</p>
+                </div>
+                <div class="banner-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?q=80&w=1000');">
+                <div class="banner-content">
+                    <h2>🥚 Œufs</h2>
+                    <p class="product-count">2 produits disponibles</p>
+                    <p class="starting-price">À partir de 2 500 FCFA/plateau</p>
+                </div>
+                <div class="banner-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('{{ url_for('static', filename='images/ladoum.jpg') }}');">
+                <div class="banner-content">
+                    <h2>🐑 Moutons</h2>
+                    <p class="product-count">2 produits disponibles</p>
+                    <p class="starting-price">À partir de 75 000 FCFA</p>
+                </div>
+                <div class="banner-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=1000');">
+                <div class="banner-content">
+                    <h2>🐄 Vaches</h2>
+                    <p class="product-count">1 produit disponible</p>
+                    <p class="starting-price">À partir de 350 000 FCFA</p>
+                </div>
+                <div class="banner-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<footer class="app-footer">
+    <button class="nav-item active">
+        <i class="fa-solid fa-house"></i>
+        <span>Accueil</span>
+    </button>
+        
+    <button class="nav-item">
+        <i class="fa-solid fa-shop"></i>
+        <span>Boutique</span>
+    </button>
+        
+    <button class="nav-item">
+        <i class="fa-solid fa-box"></i>
+        <span>Suivi</span>
+    </button>
+        
+    <button class="nav-item">
+        <i class="fa-solid fa-microphone"></i>
+        <span>Assistant</span>
+    </button>
+</footer>
+
+</body>
+</html>

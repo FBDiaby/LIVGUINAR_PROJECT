@@ -1,0 +1,41 @@
+# ==========================================
+# 🔒 SECRETS & CONFIGURATION LOCALE (CRITIQUE)
+# ==========================================
+.env
+*.local
+.env.development
+.env.production
+
+# ==========================================
+# 🗄️ DONNÉES DOCKER DYNAMIQUES
+# ==========================================
+# Si MariaDB sauvegarde ses données dans un dossier local, on l'ignore
+mysql_data/
+db_data/
+.db_data/
+
+# ==========================================
+# 🐍 PYTHON & DEPENDANCES INFRA
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+.venv/
+env/
+lib/
+lib64/
+
+# ==========================================
+# 🛠️ ENVIRONNEMENTS D'ÉDITEURS & SYSTEME
+# ==========================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+.DS_Store
+Thumbs.db
