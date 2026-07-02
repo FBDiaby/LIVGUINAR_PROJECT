@@ -26,6 +26,7 @@ def index():
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM produits;")
         liste_produits = cursor.fetchall()
+        print("PRODUITS:", liste_produits)
         cursor.close()
         conn.close()
         return render_template('index.html', produits=liste_produits)
@@ -35,6 +36,117 @@ def index():
 # =========================================================================
 # 💬 INTERFACE DE L'ASSISTANT VOCAL MULTILINGUE
 # =========================================================================
+@app.route('/api/produits', methods=['GET'])
+def get_produits():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM produits")
+        produits = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(produits)
+
+    except Exception as e:
+        return jsonify({"erreur": str(e)}), 500
+@app.route('/api/produits', methods=['POST'])
+def add_produit():
+    try:
+        data = request.get_json()
+
+        nom = data['nom_produit']
+        description = data.get('description', '')
+        image_url = data.get('image_url', '')
+        id_categorie = data['id_categorie']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO produits (nom_produit, description, image_url, id_categorie)
+            VALUES (%s, %s, %s, %s)
+        """, (nom, description, image_url, id_categorie))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Produit ajouté avec succès"}), 201
+
+    except Exception as e:
+        return jsonify({"erreur": str(e)}), 500
+@app.route('/api/produits/<int:id>', methods=['GET'])
+def get_produit_by_id(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM produits WHERE id_produit = %s", (id,))
+        produit = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if produit:
+            return jsonify(produit)
+        else:
+            return jsonify({"message": "Produit introuvable"}), 404
+
+    except Exception as e:
+        return jsonify({"erreur": str(e)}), 500
+@app.route('/api/produits/<int:id>', methods=['PUT'])
+def update_produit(id):
+    try:
+        data = request.get_json()
+
+        nom = data['nom_produit']
+        description = data.get('description', '')
+        image_url = data.get('image_url', '')
+        id_categorie = data['id_categorie']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE produits
+            SET nom_produit = %s,
+                description = %s,
+                image_url = %s,
+                id_categorie = %s
+            WHERE id_produit = %s
+        """, (nom, description, image_url, id_categorie, id))
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Produit modifié avec succès"})
+
+    except Exception as e:
+        return jsonify({"erreur": str(e)}), 500
+@app.route('/api/produits/<int:id>', methods=['DELETE'])
+def delete_produit(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM produits WHERE id_produit = %s", (id,))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"message": "Produit introuvable"}), 404
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Produit supprimé avec succès"})
+
+    except Exception as e:
+        return jsonify({"erreur": str(e)}), 500
 @app.route('/assistant')
 def assistant_view():
     return render_template('assistant.html')
@@ -42,13 +154,12 @@ def assistant_view():
 # =========================================================================
 # 🧭 ECOUTEUR DE FLUX WEBSOCKETS (Temps réel)
 # =========================================================================
-@socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 @socketio.on('update_delivery_location')
 def handle_delivery_location(data):
     print(f"📡 [GPS] Position recue du livreur : {data}")
-    emit('location_broadcast', data, broadcast=True)
-
+    socketio.emit('location_broadcast', data, broadcast=True)
 # =========================================================================
 # 📱 PASSERELLE SMS FALLBACK (Mode Hors-ligne)
 # =========================================================================

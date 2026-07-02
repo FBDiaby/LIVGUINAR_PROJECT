@@ -68,3 +68,14 @@ CREATE TABLE lignes_commande (
     FOREIGN KEY (id_commande) REFERENCES commandes(id_commande) ON DELETE CASCADE,
     FOREIGN KEY (id_poids) REFERENCES declinaisons_poids(id_poids)
 );
+INSERT INTO categories (nom_categorie) VALUES
+('Volaille'),
+('Oeufs'),
+('Moutons'),
+('Vaches');
+
+INSERT INTO produits (nom_produit, description, image_url, id_categorie) VALUES
+('Poulet Fermier', 'Poulet local élevé en plein air', '', 1),
+('Oeufs frais', 'Plateau de 30 oeufs frais', '', 2),
+('Mouton Ladoum', 'Mouton de grande taille pour sacrifice', '', 3),
+('Vache locale', 'Vache élevée localement', '', 4);
