@@ -4,7 +4,8 @@ import mysql.connector
 import os
 
 app = Flask(__name__)
-
+from routes.produits import produits_bp
+app.register_blueprint(produits_bp)
 # 🔒 RECUPERATION SECURISEE DES VARIABLES D'ENVIRONNEMENT
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'srt_secret_key_livguinar_2026')
 DATABASE_URL = os.environ.get('DATABASE_URL')
