@@ -9,7 +9,20 @@ def get_produits():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM produits")
+    cursor.execute("""
+        SELECT
+            p.id_produit,
+            p.nom_produit,
+            p.description,
+            p.image_url,
+            p.id_categorie,
+            c.nom_categorie
+        FROM produits p
+        LEFT JOIN categories c
+        ON p.id_categorie = c.id_categorie
+        ORDER BY p.id_produit
+    """)
+
     data = cursor.fetchall()
 
     cursor.close()
@@ -24,7 +37,20 @@ def get_produit(id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM produits WHERE id_produit = %s", (id,))
+    cursor.execute("""
+        SELECT
+            p.id_produit,
+            p.nom_produit,
+            p.description,
+            p.image_url,
+            p.id_categorie,
+            c.nom_categorie
+        FROM produits p
+        LEFT JOIN categories c
+        ON p.id_categorie = c.id_categorie
+        WHERE p.id_produit = %s
+    """, (id,))
+
     produit = cursor.fetchone()
 
     cursor.close()
@@ -55,6 +81,7 @@ def add_produit():
     ))
 
     conn.commit()
+
     cursor.close()
     conn.close()
 
@@ -71,11 +98,12 @@ def update_produit(id):
 
     cursor.execute("""
         UPDATE produits
-        SET nom_produit=%s,
-            description=%s,
-            image_url=%s,
-            id_categorie=%s
-        WHERE id_produit=%s
+        SET
+            nom_produit = %s,
+            description = %s,
+            image_url = %s,
+            id_categorie = %s
+        WHERE id_produit = %s
     """, (
         data['nom_produit'],
         data.get('description', ''),
@@ -85,6 +113,7 @@ def update_produit(id):
     ))
 
     conn.commit()
+
     cursor.close()
     conn.close()
 
