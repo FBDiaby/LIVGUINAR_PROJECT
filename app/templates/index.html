@@ -7,6 +7,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<script>
+async function loadProduits() {
+    const res = await fetch('/api/produits');
+    const produits = await res.json();
+
+    console.log(produits);
+
+    const container = document.querySelector('.banners-list');
+    container.innerHTML = '';
+
+    produits.forEach(p => {
+        container.innerHTML += `
+            <div class="category-banner-card">
+                <div class="banner-content">
+                    <h2>${p.nom_produit}</h2>
+                    <p>${p.description}</p>
+                </div>
+            </div>
+        `;
+    });
+}
+
+loadProduits();
+</script>
 <body>
 
 <header class="app-header">
