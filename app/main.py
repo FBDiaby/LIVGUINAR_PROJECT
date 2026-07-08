@@ -9,6 +9,9 @@ from routes.clients import clients_bp
 from routes.commandes import commandes_bp
 from routes.declinaisons_poids import declinaisons_bp
 from routes.lignes_commande import lignes_bp
+from routes.panier import panier_bp
+from routes.panier_items import panier_items_bp
+from routes.validation import validation_bp
 
 app = Flask(__name__)
 
@@ -21,6 +24,9 @@ app.register_blueprint(clients_bp)
 app.register_blueprint(commandes_bp)
 app.register_blueprint(declinaisons_bp)
 app.register_blueprint(lignes_bp)
+app.register_blueprint(panier_bp)
+app.register_blueprint(panier_items_bp)
+app.register_blueprint(validation_bp)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
