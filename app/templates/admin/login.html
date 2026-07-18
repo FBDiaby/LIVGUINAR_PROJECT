@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration — Liv'Guinar+</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --green: #0F4C3A;
+            --green-light: #1a6b52;
+            --orange: #E07B2A;
+            --bg: #f4f6f8;
+            --white: #ffffff;
+            --text: #1a1a2e;
+            --muted: #888;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-wrapper {
+            width: 100%;
+            max-width: 420px;
+            padding: 24px;
+        }
+        .login-brand {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .login-brand .brand-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--green);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 2rem;
+            color: white;
+        }
+        .login-brand h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--green);
+        }
+        .login-brand p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        .login-card h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 14px 12px 38px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .input-wrapper input:focus {
+            border-color: var(--green);
+        }
+        .toggle-pw {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        .btn-login {
+            width: 100%;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-login:hover { background: var(--green-light); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error-msg {
+            background: #fff0f0;
+            border: 1px solid #ffcdd2;
+            color: #e53935;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+        .login-footer a {
+            color: var(--green);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1>Liv'Guinar+</h1>
+            <p>Interface d'administration</p>
+        </div>
+
+        <div class="login-card">
+            <h2>Connexion administrateur</h2>
+
+            <div class="error-msg" id="errorMsg">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="errorText">Identifiants incorrects.</span>
+            </div>
+
+            <div class="form-group">
+                <label>Téléphone ou E-mail</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="identifiant" placeholder="admin@livguinar.sn" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" placeholder="••••••••" />
+                    <button class="toggle-pw" onclick="togglePw()">
+                        <i class="fa-solid fa-eye" id="pwIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-login" id="loginBtn" onclick="handleAdminLogin()">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Se connecter
+            </button>
+        </div>
+
+        <div class="login-footer">
+            <a href="/"><i class="fa-solid fa-arrow-left"></i> Retour au site</a>
+        </div>
+    </div>
+
+    <script>
+        function togglePw() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('pwIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        document.getElementById('password').addEventListener('keydown', e => {
+            if (e.key === 'Enter') handleAdminLogin();
+        });
+
+        async function handleAdminLogin() {
+            const identifiant = document.getElementById('identifiant').value.trim();
+            const password    = document.getElementById('password').value.trim();
+            const btn         = document.getElementById('loginBtn');
+            const errorMsg    = document.getElementById('errorMsg');
+            const errorText   = document.getElementById('errorText');
+
+            if (!identifiant || !password) {
+                errorText.textContent = 'Veuillez remplir tous les champs.';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion...';
+            errorMsg.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifiant, mot_de_passe: password })
+                });
+                const data = await res.json();
+
+                if (data.success && data.user.role === 'admin') {
+                    window.location.href = '/admin/dashboard';
+                } else if (data.success && data.user.role !== 'admin') {
+                    errorText.textContent = 'Accès refusé. Ce compte n\'a pas les droits administrateur.';
+                    errorMsg.style.display = 'block';
+                } else {
+                    errorText.textContent = data.error || 'Identifiants incorrects.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorText.textContent = 'Erreur de connexion au serveur.';
+                errorMsg.style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Se connecter';
+        }
+    </script>
+</body>
+</html>

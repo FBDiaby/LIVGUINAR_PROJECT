@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commander · Liv'Guinar+</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --green:#0F4C3A; --green2:#123524; --orange:#FF9F43;
+            --bg:#F5F3EE; --white:#fff; --border:#E8E6E0;
+            --text:#1A1A1A; --muted:#8E8E93; --radius:16px;
+            --shadow:0 2px 12px rgba(0,0,0,0.07);
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
+
+        /* HEADER */
+        .checkout-header{
+            background:var(--green);color:white;
+            padding:16px 20px;display:flex;align-items:center;gap:14px;
+            position:sticky;top:0;z-index:100;
+        }
+        .checkout-header h1{font-size:1.1rem;font-weight:800;}
+        .back-btn{background:rgba(255,255,255,0.15);border:none;color:white;
+            width:38px;height:38px;border-radius:50%;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;font-size:1rem;}
+
+        /* STEPS */
+        .steps-bar{
+            background:white;padding:16px 20px;
+            display:flex;align-items:center;justify-content:center;gap:0;
+            border-bottom:1px solid var(--border);
+        }
+        .step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+        .step-circle{
+            width:32px;height:32px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            font-size:0.8rem;font-weight:700;
+            background:var(--border);color:var(--muted);
+            transition:all 0.3s;
+        }
+        .step.active .step-circle{background:var(--green);color:white;}
+        .step.done .step-circle{background:#4CAF50;color:white;}
+        .step-label{font-size:0.65rem;color:var(--muted);font-weight:600;text-align:center;}
+        .step.active .step-label{color:var(--green);}
+        .step-line{height:2px;flex:0.5;background:var(--border);margin-bottom:16px;}
+        .step-line.done{background:var(--green);}
+
+        /* BODY */
+        .checkout-body{padding:16px;max-width:640px;margin:0 auto;padding-bottom:100px;}
+
+        .section-card{
+            background:white;border-radius:var(--radius);
+            box-shadow:var(--shadow);border:1px solid var(--border);
+            margin-bottom:16px;overflow:hidden;
+        }
+        .section-header{
+            padding:14px 16px;border-bottom:1px solid var(--border);
+            display:flex;align-items:center;gap:10px;
+        }
+        .section-header h3{font-size:0.9rem;font-weight:700;}
+        .section-icon{
+            width:36px;height:36px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;font-size:1rem;
+            background:var(--bg);flex-shrink:0;
+        }
+        .section-body{padding:16px;}
+
+        /* RÉCAP PANIER */
+        .recap-item{
+            display:flex;align-items:center;gap:12px;
+            padding:10px 0;border-bottom:1px solid var(--border);
+        }
+        .recap-item:last-child{border-bottom:none;}
+        .recap-img{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;}
+        .recap-info{flex:1;}
+        .recap-nom{font-size:0.88rem;font-weight:700;}
+        .recap-detail{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+        .recap-prix{font-weight:800;color:var(--green);white-space:nowrap;}
+        .recap-totaux{margin-top:14px;padding-top:14px;border-top:2px solid var(--border);}
+        .recap-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;color:var(--muted);}
+        .recap-row.total{font-weight:800;font-size:1rem;color:var(--green);padding-top:8px;border-top:1px solid var(--border);margin-top:4px;}
+
+        /* FORMULAIRE */
+        .form-group{margin-bottom:14px;}
+        .form-group label{display:block;font-size:0.78rem;font-weight:700;margin-bottom:6px;}
+        .input-wrap{position:relative;}
+        .input-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.85rem;}
+        .input-wrap input,.input-wrap select,.input-wrap textarea{
+            width:100%;padding:12px 12px 12px 38px;
+            border:1.5px solid var(--border);border-radius:12px;
+            font-size:0.88rem;outline:none;background:#fafaf8;
+            font-family:inherit;transition:border 0.2s;
+        }
+        .input-wrap input:focus,.input-wrap select:focus,.input-wrap textarea:focus{
+            border-color:var(--green);background:white;
+        }
+        .input-wrap textarea{padding-top:12px;min-height:80px;resize:vertical;}
+
+        /* CARTE LEAFLET */
+        #mapLivraison{height:220px;border-radius:12px;margin-top:12px;border:1px solid var(--border);}
+        .map-hint{font-size:0.78rem;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:5px;}
+
+        /* PAIEMENT */
+        .pay-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px;}
+        .pay-option{
+            border:2px solid var(--border);border-radius:14px;
+            padding:14px 8px;text-align:center;cursor:pointer;
+            transition:all 0.2s;background:white;
+        }
+        .pay-option:hover{border-color:var(--green);}
+        .pay-option.active{border-color:var(--green);background:#F0FAF5;}
+        .pay-logo{font-size:1.8rem;margin-bottom:6px;}
+        .pay-name{font-size:0.78rem;font-weight:700;color:var(--text);}
+        .pay-sub{font-size:0.65rem;color:var(--muted);margin-top:2px;}
+
+        /* WAVE/ORANGE MONEY FORM */
+        .pay-form{margin-top:16px;display:none;}
+        .pay-form.show{display:block;}
+
+        .pay-form-header{
+            display:flex;align-items:center;gap:10px;
+            background:var(--bg);border-radius:12px;padding:12px 14px;
+            margin-bottom:14px;
+        }
+        .pay-form-logo{font-size:1.5rem;}
+        .pay-form-title{font-size:0.88rem;font-weight:700;}
+        .pay-form-sub{font-size:0.75rem;color:var(--muted);}
+
+        .phone-input-wrap{
+            display:flex;gap:8px;align-items:center;
+        }
+        .phone-prefix{
+            background:var(--bg);border:1.5px solid var(--border);
+            border-radius:10px;padding:12px 14px;
+            font-size:0.88rem;font-weight:700;color:var(--text);
+            white-space:nowrap;flex-shrink:0;
+        }
+        .phone-input-wrap input{
+            flex:1;padding:12px 14px;
+            border:1.5px solid var(--border);border-radius:10px;
+            font-size:0.88rem;outline:none;
+            background:#fafaf8;transition:border 0.2s;
+        }
+        .phone-input-wrap input:focus{border-color:var(--green);background:white;}
+
+        .ussd-info{
+            background:#FFF8E1;border:1px solid #FFE082;
+            border-radius:10px;padding:12px 14px;font-size:0.78rem;
+            color:#795548;margin-top:10px;display:flex;gap:8px;
+        }
+
+        /* FOOTER CTA */
+        .checkout-footer{
+            position:fixed;bottom:0;left:0;right:0;
+            background:white;border-top:1px solid var(--border);
+            padding:12px 20px;max-width:640px;margin:0 auto;
+            left:50%;transform:translateX(-50%);width:100%;
+            box-shadow:0 -4px 16px rgba(0,0,0,0.08);
+        }
+        .btn-checkout{
+            width:100%;padding:16px;
+            background:var(--green);color:white;border:none;
+            border-radius:var(--radius);font-size:1rem;font-weight:800;
+            cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+            transition:all 0.2s;box-shadow:0 4px 16px rgba(15,76,58,0.3);
+            letter-spacing:0.3px;
+        }
+        .btn-checkout:hover{background:var(--green2);}
+        .btn-checkout:disabled{background:#ccc;box-shadow:none;cursor:not-allowed;}
+        .btn-checkout.loading{opacity:0.8;pointer-events:none;}
+
+        /* MODAL SUCCÈS */
+        .modal-overlay{
+            position:fixed;inset:0;background:rgba(0,0,0,0.6);
+            z-index:9999;display:none;align-items:center;justify-content:center;
+            padding:20px;backdrop-filter:blur(4px);
+        }
+        .modal-overlay.show{display:flex;}
+        .modal-card{
+            background:white;border-radius:24px;padding:32px 24px;
+            max-width:400px;width:100%;text-align:center;
+            animation:slideUp 0.4s ease;
+        }
+        @keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+        .modal-icon{font-size:4rem;margin-bottom:16px;}
+        .modal-title{font-size:1.4rem;font-weight:900;margin-bottom:8px;color:var(--green);}
+        .modal-sub{font-size:0.88rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+        .modal-num{
+            background:var(--bg);border-radius:12px;padding:12px 20px;
+            font-size:1.1rem;font-weight:800;color:var(--green);
+            margin-bottom:20px;display:inline-block;
+        }
+        .modal-steps{text-align:left;margin-bottom:24px;}
+        .modal-step{
+            display:flex;gap:10px;align-items:flex-start;
+            padding:8px 0;font-size:0.82rem;border-bottom:1px solid var(--border);
+        }
+        .modal-step:last-child{border-bottom:none;}
+        .modal-step-icon{color:var(--green);flex-shrink:0;margin-top:2px;}
+        .btn-modal-home{
+            width:100%;padding:14px;background:var(--green);color:white;
+            border:none;border-radius:14px;font-size:0.95rem;font-weight:700;
+            cursor:pointer;transition:all 0.2s;
+        }
+        .btn-modal-suivi{
+            width:100%;padding:14px;background:white;color:var(--green);
+            border:2px solid var(--green);border-radius:14px;font-size:0.95rem;
+            font-weight:700;cursor:pointer;margin-top:10px;transition:all 0.2s;
+        }
+
+        /* WAVE USSD STEPS */
+        .wave-steps{
+            background:linear-gradient(135deg,#1565C0,#1976D2);
+            border-radius:14px;padding:16px;color:white;margin-top:12px;
+        }
+        .wave-steps-title{font-size:0.82rem;font-weight:700;margin-bottom:10px;opacity:0.9;}
+        .wave-step-item{
+            display:flex;gap:10px;align-items:center;
+            padding:6px 0;font-size:0.78rem;opacity:0.9;
+        }
+        .wave-step-num{
+            background:rgba(255,255,255,0.2);width:22px;height:22px;
+            border-radius:50%;display:flex;align-items:center;justify-content:center;
+            font-size:0.7rem;font-weight:700;flex-shrink:0;
+        }
+        .orange-steps{
+            background:linear-gradient(135deg,#E65100,#F57C00);
+            border-radius:14px;padding:16px;color:white;margin-top:12px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="checkout-header">
+    <button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></button>
+    <h1>Finaliser la commande</h1>
+</div>
+
+<!-- ÉTAPES -->
+<div class="steps-bar">
+    <div class="step active" id="step1">
+        <div class="step-circle">1</div>
+        <div class="step-label">Récap</div>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2">
+        <div class="step-circle">2</div>
+        <div class="step-label">Livraison</div>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3">
+        <div class="step-circle">3</div>
+        <div class="step-label">Paiement</div>
+    </div>
+    <div class="step-line" id="line3"></div>
+    <div class="step" id="step4">
+        <div class="step-circle">4</div>
+        <div class="step-label">Confirmation</div>
+    </div>
+</div>
+
+<div class="checkout-body">
+
+    <!-- ÉTAPE 1 : RÉCAP PANIER -->
+    <div id="etape1">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">🛒</div>
+                <h3>Votre panier</h3>
+            </div>
+            <div class="section-body">
+                <div id="recapItems">
+                    <div style="text-align:center;color:var(--muted);padding:20px;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Chargement...
+                    </div>
+                </div>
+                <div class="recap-totaux">
+                    <div class="recap-row"><span>Sous-total</span><span id="recapSousTotal">—</span></div>
+                    <div class="recap-row"><span>Frais de livraison</span><span>1 500 FCFA</span></div>
+                    <div class="recap-row total"><span>TOTAL</span><span id="recapTotal">—</span></div>
+                </div>
+            </div>
+        </div>
+        <div style="height:80px;"></div>
+        <div class="checkout-footer">
+            <button class="btn-checkout" onclick="allerEtape(2)">
+                <i class="fa-solid fa-location-dot"></i>
+                Définir l'adresse de livraison
+            </button>
+        </div>
+    </div>
+
+    <!-- ÉTAPE 2 : LIVRAISON + CARTE -->
+    <div id="etape2" style="display:none;">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">👤</div>
+                <h3>Informations de livraison</h3>
+            </div>
+            <div class="section-body">
+                <div class="form-group">
+                    <label>Nom complet *</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="nomClient" placeholder="Ex: Amadou Diop">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Téléphone *</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-phone"></i>
+                        <input type="tel" id="telClient" placeholder="Ex: 77 123 45 67">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Adresse de livraison *</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <input type="text" id="adresseClient" placeholder="Ex: Rue 10, Médina, Dakar">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Précisez votre position sur la carte <span style="color:var(--muted);font-weight:400;">(glissez le marqueur)</span></label>
+                    <div id="mapLivraison"></div>
+                    <p class="map-hint">
+                        <i class="fa-solid fa-circle-info" style="color:var(--green);"></i>
+                        Déplacez le marqueur 📍 sur votre position exacte pour guider le livreur.
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label>Notes pour le livreur <span style="color:var(--muted);font-weight:400;">(optionnel)</span></label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-comment"></i>
+                        <textarea id="notesClient" placeholder="Ex: Sonner au portail bleu, 3ème étage..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="height:80px;"></div>
+        <div class="checkout-footer">
+            <button class="btn-checkout" onclick="allerEtape(3)">
+                <i class="fa-solid fa-credit-card"></i>
+                Choisir le mode de paiement
+            </button>
+        </div>
+    </div>
+
+    <!-- ÉTAPE 3 : PAIEMENT -->
+    <div id="etape3" style="display:none;">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">💳</div>
+                <h3>Mode de paiement</h3>
+            </div>
+            <div class="section-body">
+                <div class="pay-options">
+                    <div class="pay-option active" data-pay="wave" onclick="choisirPaiement(this)">
+                        <div class="pay-logo">〰️</div>
+                        <div class="pay-name">Wave</div>
+                        <div class="pay-sub">Mobile</div>
+                    </div>
+                    <div class="pay-option" data-pay="orange_money" onclick="choisirPaiement(this)">
+                        <div class="pay-logo">🟠</div>
+                        <div class="pay-name">Orange Money</div>
+                        <div class="pay-sub">Mobile</div>
+                    </div>
+                    <div class="pay-option" data-pay="especes" onclick="choisirPaiement(this)">
+                        <div class="pay-logo">💵</div>
+                        <div class="pay-name">À la livraison</div>
+                        <div class="pay-sub">Espèces</div>
+                    </div>
+                </div>
+
+                <!-- Formulaire Wave -->
+                <div class="pay-form show" id="formWave">
+                    <div class="pay-form-header">
+                        <div class="pay-form-logo">〰️</div>
+                        <div>
+                            <div class="pay-form-title">Paiement Wave</div>
+                            <div class="pay-form-sub">Entrez votre numéro Wave</div>
+                        </div>
+                    </div>
+                    <div class="phone-input-wrap">
+                        <div class="phone-prefix">🇸🇳 +221</div>
+                        <input type="tel" id="wavePhone" placeholder="77 XXX XX XX" maxlength="12"
+                               inputmode="numeric" oninput="formaterTel(this)">
+                    </div>
+                    <div class="wave-steps">
+                        <div class="wave-steps-title">📱 Comment ça marche :</div>
+                        <div class="wave-step-item"><div class="wave-step-num">1</div><span>Entrez votre numéro Wave ci-dessus</span></div>
+                        <div class="wave-step-item"><div class="wave-step-num">2</div><span>Cliquez sur "Confirmer la commande"</span></div>
+                        <div class="wave-step-item"><div class="wave-step-num">3</div><span>Une notification Wave sera envoyée sur votre téléphone</span></div>
+                        <div class="wave-step-item"><div class="wave-step-num">4</div><span>Approuvez le paiement de <strong id="waveTotal">—</strong></span></div>
+                    </div>
+                </div>
+
+                <!-- Formulaire Orange Money -->
+                <div class="pay-form" id="formOrange">
+                    <div class="pay-form-header">
+                        <div class="pay-form-logo">🟠</div>
+                        <div>
+                            <div class="pay-form-title">Paiement Orange Money</div>
+                            <div class="pay-form-sub">Entrez votre numéro Orange</div>
+                        </div>
+                    </div>
+                    <div class="phone-input-wrap">
+                        <div class="phone-prefix">🇸🇳 +221</div>
+                        <input type="tel" id="orangePhone" placeholder="77 XXX XX XX" maxlength="12"
+                               inputmode="numeric" oninput="formaterTel(this)">
+                    </div>
+                    <div class="orange-steps">
+                        <div class="wave-steps-title">📱 Comment ça marche :</div>
+                        <div class="wave-step-item"><div class="wave-step-num">1</div><span>Entrez votre numéro Orange Money</span></div>
+                        <div class="wave-step-item"><div class="wave-step-num">2</div><span>Composez <strong>#144#</strong> sur votre téléphone</span></div>
+                        <div class="wave-step-item"><div class="wave-step-num">3</div><span>Sélectionnez "Paiement marchand" et entrez le code reçu</span></div>
+                        <div class="wave-step-item"><div class="wave-step-num">4</div><span>Montant : <strong id="orangeTotal">—</strong></span></div>
+                    </div>
+                </div>
+
+                <!-- Espèces -->
+                <div class="pay-form" id="formEspeces">
+                    <div style="background:#F0FAF5;border-radius:14px;padding:16px;margin-top:12px;">
+                        <div style="display:flex;gap:10px;align-items:flex-start;">
+                            <i class="fa-solid fa-circle-info" style="color:var(--green);margin-top:2px;"></i>
+                            <div>
+                                <div style="font-size:0.88rem;font-weight:700;color:var(--green);margin-bottom:4px;">Paiement à la livraison</div>
+                                <div style="font-size:0.8rem;color:#555;line-height:1.6;">
+                                    Préparez le montant exact en espèces. Notre livreur accepte également Wave et Orange Money sur place.
+                                    <br><br>
+                                    Montant à préparer : <strong id="especesTotal" style="color:var(--green);">—</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Récap final -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">📋</div>
+                <h3>Récapitulatif final</h3>
+            </div>
+            <div class="section-body">
+                <div class="recap-row"><span>Client</span><span id="finalNom">—</span></div>
+                <div class="recap-row"><span>Téléphone</span><span id="finalTel">—</span></div>
+                <div class="recap-row"><span>Adresse</span><span id="finalAdresse">—</span></div>
+                <div class="recap-row total"><span>Total</span><span id="finalTotal">—</span></div>
+            </div>
+        </div>
+
+        <div style="height:80px;"></div>
+        <div class="checkout-footer">
+            <button class="btn-checkout" id="btnConfirmer" onclick="confirmerCommande()">
+                <i class="fa-solid fa-check"></i>
+                Confirmer la commande
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL SUCCÈS -->
+<div class="modal-overlay" id="modalSucces">
+    <div class="modal-card">
+        <div class="modal-icon">🎉</div>
+        <div class="modal-title">Commande confirmée !</div>
+        <div class="modal-sub">
+            Votre commande a été enregistrée avec succès.<br>
+            Vous recevrez une confirmation par SMS.
+        </div>
+        <div class="modal-num" id="modalNumero">#LG-XXXXXX</div>
+        <div class="modal-steps">
+            <div class="modal-step">
+                <i class="fa-solid fa-check-circle modal-step-icon" style="color:var(--green);"></i>
+                <span>Commande enregistrée dans notre système</span>
+            </div>
+            <div class="modal-step">
+                <i class="fa-solid fa-clock modal-step-icon" style="color:var(--orange);"></i>
+                <span>Préparation en cours par notre équipe</span>
+            </div>
+            <div class="modal-step">
+                <i class="fa-solid fa-motorcycle modal-step-icon" style="color:var(--green);"></i>
+                <span>Livraison estimée dans 2h à Dakar</span>
+            </div>
+        </div>
+        <button class="btn-modal-suivi" onclick="voirSuivi()">
+            <i class="fa-solid fa-box"></i> Suivre ma commande
+        </button>
+        <button class="btn-modal-home" onclick="retourAccueil()" style="margin-top:10px;">
+            <i class="fa-solid fa-house"></i> Retour à l'accueil
+        </button>
+    </div>
+</div>
+
+<script>
+// =========================================================================
+// ÉTAT
+// =========================================================================
+let panier    = JSON.parse(localStorage.getItem('lg_panier') || '[]');
+let etapeActuelle = 1;
+let modePaiement  = 'wave';
+let coordonnees   = null; // {lat, lon}
+let mapInstance   = null;
+let markerClient  = null;
+let commandeNumero = '';
+
+const FRAIS_LIVRAISON = 1500;
+
+function formatPrix(n) { return Number(n).toLocaleString('fr-FR') + ' FCFA'; }
+
+// =========================================================================
+// INITIALISATION
+// =========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    afficherRecap();
+});
+
+function afficherRecap() {
+    const container = document.getElementById('recapItems');
+    if (panier.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:var(--muted);padding:20px;">Votre panier est vide.</p>';
+        return;
+    }
+
+    container.innerHTML = panier.map(item => `
+        <div class="recap-item">
+            <img class="recap-img" src="${item.image}" alt="${item.nom}">
+            <div class="recap-info">
+                <div class="recap-nom">${item.nom}</div>
+                <div class="recap-detail">${item.poidsLabel} · Qté : ${item.quantite}</div>
+            </div>
+            <div class="recap-prix">${formatPrix(item.prix * item.quantite)}</div>
+        </div>
+    `).join('');
+
+    const sousTotal = panier.reduce((a, i) => a + i.prix * i.quantite, 0);
+    const total     = sousTotal + FRAIS_LIVRAISON;
+
+    document.getElementById('recapSousTotal').textContent = formatPrix(sousTotal);
+    document.getElementById('recapTotal').textContent     = formatPrix(total);
+    document.getElementById('waveTotal').textContent      = formatPrix(total);
+    document.getElementById('orangeTotal').textContent    = formatPrix(total);
+    document.getElementById('especesTotal').textContent   = formatPrix(total);
+    document.getElementById('finalTotal').textContent     = formatPrix(total);
+}
+
+// =========================================================================
+// NAVIGATION ÉTAPES
+// =========================================================================
+function allerEtape(n) {
+    // Validation
+    if (n === 3) {
+        if (!document.getElementById('nomClient').value.trim()) { alert('Veuillez entrer votre nom.'); return; }
+        if (!document.getElementById('telClient').value.trim()) { alert('Veuillez entrer votre téléphone.'); return; }
+        if (!document.getElementById('adresseClient').value.trim()) { alert('Veuillez entrer votre adresse.'); return; }
+        // Récup finale
+        document.getElementById('finalNom').textContent     = document.getElementById('nomClient').value;
+        document.getElementById('finalTel').textContent     = document.getElementById('telClient').value;
+        document.getElementById('finalAdresse').textContent = document.getElementById('adresseClient').value;
+    }
+
+    // Masquer toutes les étapes
+    [1,2,3].forEach(i => {
+        document.getElementById(`etape${i}`).style.display = 'none';
+    });
+    document.getElementById(`etape${n}`).style.display = 'block';
+    etapeActuelle = n;
+
+    // Mettre à jour les circles
+    [1,2,3,4].forEach(i => {
+        const el = document.getElementById(`step${i}`);
+        const line = document.getElementById(`line${i}`);
+        el.classList.remove('active','done');
+        if (i < n) el.classList.add('done');
+        else if (i === n) el.classList.add('active');
+        if (line) line.classList.toggle('done', i < n);
+    });
+
+    // Init carte à l'étape 2
+    if (n === 2 && !mapInstance) setTimeout(initMapLivraison, 300);
+
+    window.scrollTo(0,0);
+}
+
+// =========================================================================
+// CARTE INTERACTIVE
+// =========================================================================
+function initMapLivraison() {
+    // Centre sur Dakar
+    const dakar = [14.6937, -17.4441];
+    mapInstance = L.map('mapLivraison').setView(dakar, 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(mapInstance);
+
+    // Icône personnalisée
+    const icon = L.divIcon({
+        className: '',
+        html: `<div style="background:#0F4C3A;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:1.3rem;cursor:grab;">📍</div>`,
+        iconSize:[40,40], iconAnchor:[20,20]
+    });
+
+    // Marqueur draggable
+    markerClient = L.marker(dakar, { icon, draggable: true }).addTo(mapInstance);
+    markerClient.bindPopup('<b>Votre position</b><br>Glissez le marqueur sur votre adresse exacte').openPopup();
+
+    // Sauvegarder les coordonnées quand le marqueur bouge
+    markerClient.on('dragend', (e) => {
+        const pos = e.target.getLatLng();
+        coordonnees = { lat: pos.lat, lon: pos.lng };
+        markerClient.setPopupContent(`<b>Position confirmée</b><br>Lat: ${pos.lat.toFixed(5)}<br>Lon: ${pos.lng.toFixed(5)}`).openPopup();
+
+        // Reverse geocoding pour auto-remplir l'adresse
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.lat}&lon=${pos.lng}&format=json&accept-language=fr`)
+            .then(r => r.json())
+            .then(d => {
+                const a = d.address || {};
+                const quartier = a.suburb || a.neighbourhood || a.city_district || '';
+                const rue      = a.road || '';
+                const adresse  = [rue, quartier, 'Dakar'].filter(Boolean).join(', ');
+                document.getElementById('adresseClient').value = adresse;
+            })
+            .catch(() => {});
+    });
+
+    // Clic sur la carte = déplacer le marqueur
+    mapInstance.on('click', (e) => {
+        markerClient.setLatLng(e.latlng);
+        coordonnees = { lat: e.latlng.lat, lon: e.latlng.lng };
+        markerClient.setPopupContent(`<b>Position confirmée</b><br>Lat: ${e.latlng.lat.toFixed(5)}<br>Lon: ${e.latlng.lng.toFixed(5)}`).openPopup();
+
+        // Reverse geocoding
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${e.latlng.lat}&lon=${e.latlng.lng}&format=json&accept-language=fr`)
+            .then(r => r.json())
+            .then(d => {
+                const a = d.address || {};
+                const rue      = a.road || '';
+                const quartier = a.suburb || a.neighbourhood || '';
+                const adresse  = [rue, quartier, 'Dakar'].filter(Boolean).join(', ');
+                document.getElementById('adresseClient').value = adresse;
+            })
+            .catch(() => {});
+    });
+
+    // Essayer de géolocaliser automatiquement
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const latlng = [pos.coords.latitude, pos.coords.longitude];
+            mapInstance.setView(latlng, 15);
+            markerClient.setLatLng(latlng);
+            coordonnees = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        }, () => {});
+    }
+}
+
+// =========================================================================
+// PAIEMENT
+// =========================================================================
+function choisirPaiement(el) {
+    document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    modePaiement = el.dataset.pay;
+
+    // Afficher le bon formulaire
+    document.querySelectorAll('.pay-form').forEach(f => f.classList.remove('show'));
+    const formMap = { wave:'formWave', orange_money:'formOrange', especes:'formEspeces' };
+    document.getElementById(formMap[modePaiement])?.classList.add('show');
+}
+
+function formaterTel(input) {
+    let v = input.value.replace(/\D/g,'');
+    if (v.length > 2) v = v.slice(0,2) + ' ' + v.slice(2);
+    if (v.length > 5) v = v.slice(0,5) + ' ' + v.slice(5);
+    if (v.length > 8) v = v.slice(0,8) + ' ' + v.slice(8);
+    input.value = v;
+}
+
+// =========================================================================
+// CONFIRMER COMMANDE
+// =========================================================================
+async function confirmerCommande() {
+    const btn = document.getElementById('btnConfirmer');
+    btn.classList.add('loading');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Traitement en cours...';
+
+    const sousTotal = panier.reduce((a, i) => a + i.prix * i.quantite, 0);
+    const total     = sousTotal + FRAIS_LIVRAISON;
+
+    const payload = {
+        nom_client:    document.getElementById('nomClient').value.trim(),
+        telephone:     document.getElementById('telClient').value.trim(),
+        adresse:       document.getElementById('adresseClient').value.trim(),
+        notes:         document.getElementById('notesClient').value.trim(),
+        mode_paiement: modePaiement,
+        coordonnees_gps: coordonnees ? `${coordonnees.lat},${coordonnees.lon}` : null,
+        lignes: panier.map(item => ({
+            id_produit:  item.prodId,
+            id_poids:    item.idPoidsReel || item.poidsIdx,
+            nom_produit: item.nom,
+            poids_label: item.poidsLabel,
+            quantite:    item.quantite,
+            prix_unitaire: item.prix,
+            total_ligne: item.prix * item.quantite
+        }))
+    };
+
+    try {
+        const res  = await fetch('/api/commandes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            commandeNumero = data.numero;
+            // Vider le panier
+            localStorage.removeItem('lg_panier');
+            // Afficher modal succès
+            document.getElementById('modalNumero').textContent = `#${commandeNumero}`;
+            document.getElementById('modalSucces').classList.add('show');
+        } else {
+            alert('Erreur : ' + (data.error || 'Veuillez réessayer.'));
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmer la commande';
+        }
+    } catch(e) {
+        alert('Connexion impossible. Vérifiez votre connexion internet.');
+        btn.classList.remove('loading');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmer la commande';
+    }
+}
+
+function voirSuivi() {
+    window.location.href = `/?suivi=${commandeNumero}`;
+}
+
+function retourAccueil() {
+    window.location.href = '/';
+}
+</script>
+</body>
+</html>

@@ -6,129 +6,923 @@
     <title>Liv'Guinar+</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
-<header class="app-header">
+<!-- =====================================================
+     SIDEBAR NAVIGATION
+===================================================== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<nav class="sidebar-navigation" id="sidebarMenu">
+    <div class="sidebar-header">
+        <div class="sidebar-brand-box">
+            <span class="sidebar-nav-title">NAVIGATION</span>
+            <h3>Liv'Guinar+</h3>
+            <p class="sidebar-subtitle">Bétail de qualité · Dakar</p>
+        </div>
+        <button class="close-sidebar-btn" id="closeSidebarBtn" aria-label="Fermer le menu">
+            <i class="fa-solid fa-times"></i>
+        </button>
+    </div>
+    <ul class="sidebar-links-list">
+        <li>
+            <a href="#" class="sidebar-link active" data-nav="accueil" id="sidebar-link-accueil">
+                <div class="sidebar-icon-circle"><i class="fa-solid fa-store"></i></div>
+                <span>Boutique</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="sidebar-link" data-nav="apropos">
+                <div class="sidebar-icon-circle"><i class="fa-solid fa-tags"></i></div>
+                <span>À Propos</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="sidebar-link" data-nav="blog">
+                <div class="sidebar-icon-circle"><i class="fa-solid fa-book-open"></i></div>
+                <span>Blog</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="sidebar-link" data-nav="contact">
+                <div class="sidebar-icon-circle"><i class="fa-solid fa-envelope"></i></div>
+                <span>Contact</span>
+            </a>
+        </li>
+    </ul>
+    <div class="sidebar-footer">
+        <a href="#" class="sidebar-account-btn">
+            <div class="sidebar-icon-circle"><i class="fa-solid fa-user"></i></div>
+            <div class="account-btn-text">
+                <span class="account-title">Mon compte</span>
+                <span class="account-subtitle">Connexion / Inscription</span>
+            </div>
+            <i class="fa-solid fa-chevron-right account-arrow"></i>
+        </a>
+    </div>
+</nav>
+
+<!-- =====================================================
+     SIDEBAR FILTRE BOUTIQUE
+===================================================== -->
+<div class="filter-overlay" id="filterOverlay"></div>
+<nav class="filter-sidebar" id="filterSidebar">
+    <div class="filter-header">
+        <div>
+            <span class="filter-nav-label">FILTRER LES PRODUITS</span>
+            <h3>Liv'Guinar+</h3>
+            <p class="filter-subtitle">La Boutique · Dakar</p>
+        </div>
+        <button class="close-filter-btn" id="closeFilterBtn">
+            <i class="fa-solid fa-times"></i>
+        </button>
+    </div>
+
+    <div class="filter-body">
+        <p class="filter-section-label">CATÉGORIES</p>
+        <div class="filter-cat-list" id="filterCatList">
+            <label class="filter-cat-item active" data-cat="volaille">
+                <input type="checkbox" checked hidden>
+                <div class="filter-cat-check"><i class="fa-solid fa-check"></i></div>
+                <span class="chip-emoji">🐔</span> Volaille
+            </label>
+            <label class="filter-cat-item active" data-cat="oeufs">
+                <input type="checkbox" checked hidden>
+                <div class="filter-cat-check"><i class="fa-solid fa-check"></i></div>
+                <span class="chip-emoji">🥚</span> Œufs
+            </label>
+            <label class="filter-cat-item active" data-cat="moutons">
+                <input type="checkbox" checked hidden>
+                <div class="filter-cat-check"><i class="fa-solid fa-check"></i></div>
+                <span class="chip-emoji">🐑</span> Moutons
+            </label>
+            <label class="filter-cat-item active" data-cat="vaches">
+                <input type="checkbox" checked hidden>
+                <div class="filter-cat-check"><i class="fa-solid fa-check"></i></div>
+                <span class="chip-emoji">🐄</span> Vaches
+            </label>
+        </div>
+
+        <p class="filter-section-label" style="margin-top:24px;">GAMME DE PRIX</p>
+        <div class="price-range-card">
+            <div class="price-range-labels">
+                <div class="price-pill">
+                    <span class="pill-label">Min</span>
+                    <span id="priceMinLabel">2 000 FCFA</span>
+                </div>
+                <div class="price-pill">
+                    <span class="pill-label">Max</span>
+                    <span id="priceMaxLabel">500 000 FCFA</span>
+                </div>
+            </div>
+            <input type="range" id="priceRange" min="0" max="500000" step="1000" value="500000" class="price-slider">
+        </div>
+
+        <p class="filter-section-label" style="margin-top:24px;">POIDS MINIMUM</p>
+        <div class="weight-filter-group" id="weightFilterGroup">
+            <button class="weight-filter-btn active" data-w="all">Tous</button>
+            <button class="weight-filter-btn" data-w="1.2">1,2 kg</button>
+            <button class="weight-filter-btn" data-w="1.5">1,5 kg</button>
+            <button class="weight-filter-btn" data-w="2.0">2,0 kg</button>
+        </div>
+    </div>
+
+    <div class="filter-footer">
+        <button class="btn-apply-filter" id="btnApplyFilter">
+            <i class="fa-solid fa-check"></i> Appliquer les filtres
+        </button>
+        <button class="btn-reset-filter" id="btnResetFilter">Réinitialiser les filtres</button>
+    </div>
+</nav>
+
+<!-- =====================================================
+     HEADER ACCUEIL
+===================================================== -->
+<header class="app-header" id="headerAccueil">
     <div class="header-top">
-        <button class="icon-btn">
+        <button class="icon-btn" id="openSidebarBtn" aria-label="Ouvrir le menu">
             <i class="fa-solid fa-bars"></i>
         </button>
-
         <div class="brand-title">
             <span class="sub-welcome">BIENVENUE SUR</span>
             <h1>Liv'Guinar+</h1>
         </div>
-
-        <button class="icon-btn">
+        <button class="icon-btn cart-btn" id="cartBtn" aria-label="Panier">
             <i class="fa-solid fa-cart-shopping"></i>
+            <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
         </button>
     </div>
-
     <div class="search-container">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" placeholder="Rechercher un animal...">
+            <input type="text" placeholder="Rechercher un animal ou un pack..." aria-label="Recherche" id="searchInput">
         </div>
     </div>
 </header>
 
+<!-- =====================================================
+     HEADER BOUTIQUE
+===================================================== -->
+<header class="app-header boutique-header" id="headerBoutique" style="display:none;">
+    <div class="header-top">
+        <button class="icon-btn" id="openFilterBtn" aria-label="Filtrer">
+            <i class="fa-solid fa-sliders"></i>
+        </button>
+        <div class="brand-title">
+            <h1 style="font-size:1.2rem;">La Boutique</h1>
+        </div>
+        <button class="icon-btn cart-btn" id="cartBtnBoutique" aria-label="Panier">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="cart-badge" id="cartBadgeBoutique" style="display:none;">0</span>
+        </button>
+    </div>
+</header>
+
+<!-- =====================================================
+     HEADER SUIVI (pas de barre verte en haut)
+===================================================== -->
+
+<!-- =====================================================
+     HEADER ASSISTANT
+===================================================== -->
+<header class="app-header assistant-header" id="headerAssistant" style="display:none;">
+    <div class="header-top">
+        <button class="icon-btn" id="backFromAssistant" aria-label="Retour">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="brand-title">
+            <span class="sub-welcome">ASSISTANT</span>
+            <h1>LivGuinar+</h1>
+        </div>
+        <div style="width:36px;"></div>
+    </div>
+    <div class="lang-chips">
+        <button class="lang-chip active" data-lang="fr">
+            <span class="lang-flag">FR</span> Français
+        </button>
+        <button class="lang-chip" data-lang="wo">
+            <span class="lang-flag">SN</span> Wolof
+        </button>
+        <button class="lang-chip" data-lang="se">
+            <span class="lang-flag">SN</span> Sérère
+        </button>
+    </div>
+</header>
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
 <main class="main-content">
 
-    <section class="categories-section">
-        <h2 class="section-title">NOS CATÉGORIES</h2>
-        <div class="categories-list">
-            <button class="category-chip active">
-                <span class="chip-emoji">🌿</span> Tout
+    <!-- ========== SECTION ACCUEIL ========== -->
+    <div id="section-accueil">
+        <section class="categories-section">
+            <p class="section-title">NOS CATÉGORIES</p>
+            <div class="categories-list">
+                <button class="category-chip active" data-cat="tout">
+                    <span class="chip-emoji">🌿</span> Tout
+                </button>
+                <button class="category-chip" data-cat="volaille">
+                    <span class="chip-emoji">🐔</span> Volaille
+                </button>
+                <button class="category-chip" data-cat="oeufs">
+                    <span class="chip-emoji">🥚</span> Œufs
+                </button>
+                <button class="category-chip" data-cat="moutons">
+                    <span class="chip-emoji">🐑</span> Moutons
+                </button>
+                <button class="category-chip" data-cat="vaches">
+                    <span class="chip-emoji">🐄</span> Vaches
+                </button>
+            </div>
+        </section>
+
+        <section class="banners-section" id="bannersSection">
+            <!-- Rempli dynamiquement par JS -->
+        </section>
+    </div>
+
+    <!-- ========== SECTION BOUTIQUE ========== -->
+    <div id="section-boutique" style="display:none;">
+        <div class="shop-container">
+            <div class="shop-header">
+                <h2 id="shopTitle">Tous les produits <span class="product-count-label" id="shopCount"></span></h2>
+                <div class="sort-dropdown" id="sortDropdown">
+                    <span>Trier</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="products-grid" id="products-container"></div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION DETAIL PRODUIT ========== -->
+    <div id="section-detail" style="display:none;">
+        <div class="detail-container" id="detailContainer">
+            <!-- Rempli dynamiquement -->
+        </div>
+    </div>
+
+    <!-- ========== SECTION PANIER ========== -->
+    <div id="section-panier" style="display:none;">
+        <div class="panier-container">
+            <div class="panier-header-row" style="display:none;">
+                <button class="back-btn" id="backFromPanier">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h2>Mon Panier</h2>
+            </div>
+            <div id="panierItems"></div>
+            <div class="panier-total-card" id="panierTotalCard" style="display:none;">
+                <div class="total-row"><span>Sous-total</span><span id="sousTotal">0 FCFA</span></div>
+                <div class="total-row"><span>Livraison</span><span id="fraisLivraison">1 500 FCFA</span></div>
+                <div class="total-row total-final"><span>TOTAL</span><span id="totalFinal">0 FCFA</span></div>
+                <button class="btn-commander" onclick="window.location.href='/checkout'">
+                    <i class="fa-solid fa-check"></i> Passer la commande
+                </button>
+            </div>
+            <div id="panierEmpty" class="panier-empty" style="display:none;">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <p>Votre panier est vide</p>
+                <button class="btn-add" id="btnContinuerAchat">Continuer les achats</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION SUIVI ========== -->
+    <div id="section-suivi" style="display:none;">
+        <div class="tracking-container">
+
+            <!-- ── HERO HEADER PLEINE LARGEUR ── -->
+            <div class="tracking-hero">
+                <div class="tracking-hero-inner">
+                    <div class="tracking-hero-left">
+                        <span class="order-number-tag">COMMANDE #LG-2847</span>
+                        <h2>Suivi de commande</h2>
+                        <span class="order-date-tag">
+                            <i class="fa-regular fa-calendar"></i> 17 juin 2026
+                        </span>
+                        <div class="tracking-status-row">
+                            <div class="status-badge-live">
+                                <span class="pulse-dot"></span>
+                                En cours de livraison...
+                            </div>
+                            <div class="tracking-actions-row">
+                                <button class="icon-btn tracking-action-btn" aria-label="Notifications">
+                                    <i class="fa-solid fa-envelope-open-text"></i>
+                                </button>
+                                <button class="icon-btn tracking-action-btn" aria-label="Son">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="offline-sync-text">
+                            <span class="sync-dot-green"></span>
+                            Suivi synchronisé par SMS · Mode hors-ligne activé
+                        </p>
+                    </div>
+                    <div class="tracking-hero-right">
+                        <div class="eta-circle">
+                            <span class="eta-number">12</span>
+                            <span class="eta-unit">min</span>
+                            <span class="eta-label">Arrivée estimée</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Barre de progression visuelle dans le hero -->
+                <div class="hero-progress-bar">
+                    <div class="hero-progress-fill" style="width: 75%;"></div>
+                </div>
+                <p class="hero-progress-label">Livraison à 75% · 3 étapes sur 4</p>
+            </div>
+
+            <!-- ── GRILLE PRINCIPALE 2 COLONNES ── -->
+            <div class="tracking-grid">
+
+                <!-- ═══ COLONNE GAUCHE : Map + Livreur + QR ═══ -->
+                <div class="tracking-col-left">
+
+                    <!-- Carte Map -->
+                    <div class="track-card map-card">
+                        <div class="track-card-header">
+                            <div class="track-card-title">
+                                <span class="live-dot-red"></span>
+                                <span>Position en direct</span>
+                            </div>
+                            <span class="eta-chip"><i class="fa-solid fa-clock"></i> 12 min</span>
+                        </div>
+                        <div id="map"></div>
+                        <div class="map-address-footer">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>12 Rue Carnot, Dakar Plateau</span>
+                        </div>
+                    </div>
+
+                    <!-- Livreur -->
+                    <div class="track-card driver-card">
+                        <div class="track-card-header">
+                            <div class="track-card-title">
+                                <i class="fa-solid fa-motorcycle" style="color:var(--orange);"></i>
+                                <span>Votre livreur</span>
+                            </div>
+                        </div>
+                        <div class="driver-body">
+                            <div class="driver-profile">
+                                <div class="driver-avatar">MD</div>
+                                <div class="driver-details">
+                                    <h4>Moussa Diallo</h4>
+                                    <p class="driver-time">
+                                        <i class="fa-regular fa-clock"></i>
+                                        Arrivée estimée : <strong>14h30 – 15h00</strong>
+                                    </p>
+                                    <div class="driver-rating">
+                                        <span class="stars" style="color:var(--orange); font-size:0.8rem;">★★★★★</span>
+                                        <span style="font-size:0.75rem; color:var(--text-muted);">4.9 · 312 livraisons</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="driver-contact-actions">
+                                <button class="contact-btn whatsapp-contact" id="whatsappBtn" aria-label="WhatsApp">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                    <span>WhatsApp</span>
+                                </button>
+                                <button class="contact-btn phone-contact" id="phoneBtn" aria-label="Appeler">
+                                    <i class="fa-solid fa-phone"></i>
+                                    <span>Appeler</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bouton PDF — sous le bloc livreur -->
+                    <button class="download-invoice-btn" id="downloadInvoiceBtn">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>Télécharger la facture (PDF)</span>
+                    </button>
+
+                </div>
+
+                <!-- ═══ COLONNE DROITE : Progression + QR + Facture + PDF ═══ -->
+                <div class="tracking-col-right">
+
+                    <!-- Progression -->
+                    <div class="track-card progression-card">
+                        <div class="track-card-header">
+                            <div class="track-card-title">
+                                <i class="fa-solid fa-route" style="color:var(--green-dark);"></i>
+                                <span>Progression de la livraison</span>
+                            </div>
+                        </div>
+                        <div class="progression-steps">
+                            <div class="step-item done">
+                                <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                                <div class="step-text">
+                                    <span class="step-label">Commande confirmée</span>
+                                    <span class="step-desc">Votre paiement a été validé</span>
+                                </div>
+                                <span class="step-time">12h14</span>
+                            </div>
+                            <div class="step-item done">
+                                <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                                <div class="step-text">
+                                    <span class="step-label">En préparation</span>
+                                    <span class="step-desc">L'équipe emballe votre commande</span>
+                                </div>
+                                <span class="step-time">12h38</span>
+                            </div>
+                            <div class="step-item current">
+                                <div class="step-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                                <div class="step-text">
+                                    <span class="step-label">En cours de livraison</span>
+                                    <span class="step-desc">Moussa est en route vers vous</span>
+                                </div>
+                                <span class="step-time">13h52</span>
+                            </div>
+                            <div class="step-item pending">
+                                <div class="step-icon"><i class="fa-solid fa-house"></i></div>
+                                <div class="step-text">
+                                    <span class="step-label">Livraison confirmée</span>
+                                    <span class="step-desc">Présentez votre QR code</span>
+                                </div>
+                                <span class="step-time">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Code — dans colonne droite, bien intégré -->
+                    <div class="track-card qr-card">
+                        <div class="track-card-header">
+                            <div class="track-card-title">
+                                <i class="fa-solid fa-qrcode" style="color:var(--green-dark);"></i>
+                                <span>Code de confirmation</span>
+                            </div>
+                        </div>
+                        <div class="qr-body">
+                            <div class="qr-code-wrapper">
+                                <img id="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LG-2847&color=0F4C3A" alt="QR Code">
+                            </div>
+                            <div class="qr-info">
+                                <p class="qr-instruction">Présentez ce QR code au livreur à son arrivée pour valider la réception.</p>
+                                <span class="qr-order-id">#LG-2847</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordéon facture -->
+                    <div class="track-card accordion-container">
+                        <button class="accordion-btn" id="toggleAccordion">
+                            <div class="accordion-title-left">
+                                <i class="fa-solid fa-file-invoice" style="color:var(--green-dark);"></i>
+                                <span>Détail de la commande</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down accordion-arrow" id="arrowIcon"></i>
+                        </button>
+                        <div class="accordion-panel" id="accordionPanel">
+                            <div class="invoice-table-card" id="invoice-content">
+                                <div class="invoice-header">
+                                    <h4>LIV'GUINAR+ FACTURE</h4>
+                                    <small>N° LG-2847</small>
+                                </div>
+                                <table class="invoice-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Article</th>
+                                            <th class="text-center">Qté</th>
+                                            <th class="text-right">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Poulet Fermier (1,5 kg)</td>
+                                            <td class="text-center">1</td>
+                                            <td class="text-right">5 250 FCFA</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Frais de livraison (Plateau)</td>
+                                            <td class="text-center">—</td>
+                                            <td class="text-right">1 500 FCFA</td>
+                                        </tr>
+                                        <tr class="invoice-total-row">
+                                            <td>TOTAL NET PAYÉ</td>
+                                            <td></td>
+                                            <td class="text-right">6 750 FCFA</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- ========== SECTION ASSISTANT ========== -->
+    <div id="section-assistant" style="display:none;">
+        <div class="assistant-container">
+            <div class="assistant-profile-card">
+                <div class="assistant-avatar">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div class="assistant-info">
+                    <h3>Assistant LivGuinar+</h3>
+                    <p>Wolof · Sérère · Français</p>
+                </div>
+                <span class="assistant-online"><span class="online-dot"></span> En ligne</span>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages dynamiques -->
+            </div>
+
+            <div class="chat-input-bar">
+                <input type="text" id="chatInput" placeholder="Appuyez sur le micro pour parler ou écrivez ici..." />
+                <button class="mic-btn" id="micBtn" aria-label="Microphone">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION À PROPOS ========== -->
+    <div id="section-apropos" style="display:none;">
+        <div class="page-header-green">
+            <button class="icon-btn back-page-btn" data-back="accueil">
+                <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <button class="category-chip">
-                <span class="chip-emoji">🐔</span> Volaille
+            <h2>À Propos</h2>
+        </div>
+        <div class="page-body">
+            <div class="apropos-brand-card">
+                <div class="apropos-logo-box">
+                    <i class="fa-solid fa-egg" style="font-size:2rem; color:white;"></i>
+                </div>
+                <div>
+                    <h3 style="color:white; font-size:1.2rem; font-weight:700;">Liv'Guinar+</h3>
+                    <p style="color:rgba(255,255,255,0.75); font-size:0.85rem;">L'élevage local, réinventé · Sénégal</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <p class="card-section-label">NOTRE HISTOIRE</p>
+                <p class="card-title-bold">Liv'Guinar+ est née d'une ambition claire : moderniser le secteur de l'élevage local au Sénégal.</p>
+                <p class="card-body-text">Face à une demande croissante en produits frais et de qualité, nous avons bâti une filière intégrée qui maîtrise l'ensemble de la chaîne de valeur — de l'élevage à la distribution — pour garantir à chaque client un produit sain, traçable et livré dans les meilleures conditions.</p>
+            </div>
+            <div class="mission-card">
+                <p class="mission-title"><i class="fa-regular fa-heart"></i> NOTRE MISSION</p>
+                <p class="mission-body">Mettre à la portée des ménages et des professionnels de la restauration des produits sains — volailles, œufs, moutons et bovins — élevés selon des normes sanitaires et de bien-être animal rigoureuses.</p>
+                <ul class="mission-list">
+                    <li><i class="fa-solid fa-circle-check"></i> Volailles, œufs, moutons et bovins issus d'élevages contrôlés</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Normes sanitaires strictes à chaque étape de la filière</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Respect du bien-être animal comme standard non négociable</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Livraison directe pour ménages et professionnels de la restauration</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <p class="card-section-label">NOTRE VISION</p>
+                <p class="card-body-text">Devenir la marque de référence en ligne pour l'achat de volailles, d'œufs, de moutons et de vaches au Sénégal, avec la simplicité de commande et en toute sécurité.</p>
+            </div>
+            <p class="section-label-outside">NOS VALEURS</p>
+            <div class="valeur-card">
+                <div class="valeur-icon-circle" style="background:#f0faf4;">
+                    <i class="fa-solid fa-award" style="color:var(--green-dark);"></i>
+                </div>
+                <div>
+                    <h4 class="valeur-title">Fraîcheur & Qualité</h4>
+                    <p class="valeur-desc">Une traçabilité totale de la ferme à votre table. Chaque produit est identifié, contrôlé et livré dans des conditions qui préservent sa fraîcheur et sa valeur nutritive.</p>
+                </div>
+            </div>
+            <div class="valeur-card">
+                <div class="valeur-icon-circle" style="background:#fff8f0;">
+                    <i class="fa-solid fa-people-group" style="color:var(--orange);"></i>
+                </div>
+                <div>
+                    <h4 class="valeur-title">Proximité</h4>
+                    <p class="valeur-desc">Un service client réactif, ancré dans les réalités locales. Nous parlons votre langue, comprenons vos besoins et adaptons nos solutions à votre quotidien.</p>
+                </div>
+            </div>
+            <div class="valeur-card">
+                <div class="valeur-icon-circle" style="background:#f0faf4;">
+                    <i class="fa-solid fa-leaf" style="color:var(--green-dark);"></i>
+                </div>
+                <div>
+                    <h4 class="valeur-title">Engagement local</h4>
+                    <p class="valeur-desc">Valorisation de l'élevage sénégalais et promotion des circuits courts. Nous travaillons à renforcer les filières locales pour une agriculture plus juste et durable.</p>
+                </div>
+            </div>
+            <div class="delivery-zone-card">
+                <i class="fa-solid fa-location-dot" style="color:var(--green-dark);"></i>
+                <div>
+                    <h4 style="font-size:0.9rem; font-weight:600; color:var(--green-dark);">Zone de livraison</h4>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Grand Dakar et banlieue. Extension progressive vers d'autres régions du Sénégal en cours.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION BLOG ========== -->
+    <div id="section-blog" style="display:none;">
+        <div class="page-header-green">
+            <button class="icon-btn back-page-btn" data-back="accueil">
+                <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <button class="category-chip">
-                <span class="chip-emoji">🥚</span> Œufs
+            <h2>Blog & Actualités</h2>
+            <p style="color:rgba(255,255,255,0.75); font-size:0.8rem; margin-top:4px;">Conseils pratiques, recettes du terroir et guides saisonniers rédigés par nos experts en élevage.</p>
+        </div>
+        <div class="page-body">
+            <div class="blog-filter-row">
+                <button class="blog-filter-btn active" data-filter="tous">Tous</button>
+                <button class="blog-filter-btn" data-filter="sante">Santé</button>
+                <button class="blog-filter-btn" data-filter="recettes">Recettes</button>
+                <button class="blog-filter-btn" data-filter="tabaski">Tabaski</button>
+                <button class="blog-filter-btn" data-filter="conseils">Conseils</button>
+            </div>
+            <div class="blog-section-header">
+                <span><i class="fa-solid fa-book-open"></i> Articles récents <span class="blog-count">(3)</span></span>
+                <a href="#" class="blog-see-all">Tout voir →</a>
+            </div>
+            <div class="blog-card" data-category="sante">
+                <div class="blog-img-wrapper">
+                    <span class="blog-tag tag-green"><i class="fa-solid fa-leaf"></i> Santé & Élevage</span>
+                    <div class="blog-img blog-img-1"></div>
+                    <span class="blog-read-time"><i class="fa-regular fa-clock"></i> 4 min de lecture</span>
+                </div>
+                <div class="blog-card-body">
+                    <h3 class="blog-title">Pourquoi les normes sanitaires sont la base d'un élevage local responsable</h3>
+                    <p class="blog-excerpt">La qualité de ce que vous mangez commence bien avant votre assiette. Comprendre les standards sanitaires appliqués dans l'élevage local, c'est aussi protéger la santé de toute votre famille.</p>
+                    <a href="#" class="blog-read-link">Lire l'article complet →</a>
+                </div>
+            </div>
+            <div class="blog-card" data-category="recettes">
+                <div class="blog-img-wrapper">
+                    <span class="blog-tag tag-orange"><i class="fa-solid fa-utensils"></i> Recette du Terroir</span>
+                    <div class="blog-img blog-img-2"></div>
+                    <span class="blog-read-time"><i class="fa-regular fa-clock"></i> 5 min de lecture</span>
+                </div>
+                <div class="blog-card-body">
+                    <h3 class="blog-title">Yassa Poulet maison : la recette simple et savoureuse de nos grands-mères</h3>
+                    <p class="blog-excerpt">Un poulet fermier bien choisi, du citron, des oignons fondants et de la patience. Voici comment réaliser un Yassa authentique qui fait l'unanimité à table.</p>
+                    <a href="#" class="blog-read-link">Lire l'article complet →</a>
+                </div>
+            </div>
+            <div class="blog-card" data-category="tabaski">
+                <div class="blog-img-wrapper">
+                    <span class="blog-tag tag-green"><i class="fa-solid fa-star"></i> Guide Tabaski</span>
+                    <div class="blog-img blog-img-3"></div>
+                    <span class="blog-read-time"><i class="fa-regular fa-clock"></i> 3 min de lecture</span>
+                </div>
+                <div class="blog-card-body">
+                    <h3 class="blog-title">Comment bien choisir son mouton pour la Tabaski : le guide complet</h3>
+                    <p class="blog-excerpt">Poids, état de santé, race, prix : tout ce que vous devez vérifier avant d'acheter votre mouton pour la fête du sacrifice cette année.</p>
+                    <a href="#" class="blog-read-link">Lire l'article complet →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION CONTACT ========== -->
+    <div id="section-contact" style="display:none;">
+        <div class="page-header-green">
+            <button class="icon-btn back-page-btn" data-back="accueil">
+                <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <button class="category-chip">
-                <span class="chip-emoji">🐑</span> Moutons
+            <h2>Contact & Support</h2>
+            <p style="color:rgba(255,255,255,0.75); font-size:0.8rem; margin-top:6px;">Notre équipe est disponible <strong style="color:var(--orange);">7 jours sur 7</strong> pour répondre à toutes vos questions.</p>
+        </div>
+        <div class="page-body">
+            <p class="section-label-outside">NOUS CONTACTER</p>
+            <a href="https://wa.me/221XXXXXXXXX" class="contact-item-card" target="_blank">
+                <div class="contact-item-icon" style="background:#e8f8f0;">
+                    <i class="fa-brands fa-whatsapp" style="color:#25D366; font-size:1.4rem;"></i>
+                </div>
+                <div class="contact-item-info">
+                    <span class="contact-item-label">WHATSAPP BUSINESS</span>
+                    <span class="contact-item-value">+221 XX XXX XX XX</span>
+                    <span class="contact-item-sub">Réponse rapide · 7j/7, 7h – 21h</span>
+                </div>
+                <i class="fa-solid fa-chevron-right contact-arrow"></i>
+            </a>
+            <a href="tel:+221XXXXXXXXX" class="contact-item-card">
+                <div class="contact-item-icon" style="background:#f5f5f5;">
+                    <i class="fa-solid fa-phone" style="color:#555; font-size:1.2rem;"></i>
+                </div>
+                <div class="contact-item-info">
+                    <span class="contact-item-label">APPEL DIRECT</span>
+                    <span class="contact-item-value">+221 XX XXX XX XX</span>
+                    <span class="contact-item-sub">Du lundi au samedi · 8h – 18h</span>
+                </div>
+                <i class="fa-solid fa-chevron-right contact-arrow"></i>
+            </a>
+            <a href="mailto:contact@livguinar.sn" class="contact-item-card">
+                <div class="contact-item-icon" style="background:#eef4ff;">
+                    <i class="fa-solid fa-envelope" style="color:#4a7cdc; font-size:1.2rem;"></i>
+                </div>
+                <div class="contact-item-info">
+                    <span class="contact-item-label">E-MAIL</span>
+                    <span class="contact-item-value">contact@livguinar.sn</span>
+                    <span class="contact-item-sub">Réponse sous 24h ouvrées</span>
+                </div>
+                <i class="fa-solid fa-chevron-right contact-arrow"></i>
+            </a>
+            <div class="horaires-card">
+                <i class="fa-regular fa-clock" style="color:var(--green-dark);"></i>
+                <div>
+                    <strong style="font-size:0.88rem; color:var(--green-dark);">Horaires du support client</strong>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">WhatsApp & téléphone : 7j/7 de 7h à 21h · E-mail : réponse sous 24h ouvrées</p>
+                </div>
+            </div>
+            <div class="b2b-card">
+                <p class="b2b-title"><i class="fa-solid fa-building"></i> Vous êtes un professionnel ?</p>
+                <p class="b2b-desc">Hôtels, restaurants, traiteurs, grossistes — nous proposons une offre B2B structurée adaptée à vos volumes.</p>
+                <button class="btn-devis">
+                    <i class="fa-solid fa-file-lines"></i> Demander un devis professionnel
+                </button>
+            </div>
+            <p class="section-label-outside" style="margin-top:24px;">QUESTIONS FRÉQUENTES</p>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Quel est le délai minimum pour une livraison ?</span>
+                    <i class="fa-solid fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-answer">Pour les commandes passées avant 12h, nous assurons une livraison le jour même dans Grand Dakar.</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Proposez-vous la découpe et le nettoyage à la livraison ?</span>
+                    <i class="fa-solid fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-answer">Oui, pour les volailles uniquement. Activez l'option 'Prêt à cuisiner' sur la fiche produit.</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Comment fonctionne le paiement à la livraison ?</span>
+                    <i class="fa-solid fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-answer">Notre livreur accepte les espèces, Wave et Orange Money. Le QR code sert de bon de confirmation.</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Livrez-vous en dehors de Dakar ?</span>
+                    <i class="fa-solid fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-answer">Actuellement Grand Dakar et banlieue. Extension vers d'autres régions en cours.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION MON COMPTE ========== -->
+    <div id="section-compte" style="display:none;">
+        <div class="page-header-green">
+            <button class="icon-btn back-page-btn" data-back="accueil">
+                <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <button class="category-chip">
-                <span class="chip-emoji">🐄</span> Vaches
+            <h2>Mon Compte</h2>
+        </div>
+        <div id="compte-auth-view" class="page-body">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Connexion</button>
+                <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Inscription</button>
+            </div>
+            <div id="form-login" class="auth-form">
+                <div class="auth-welcome">
+                    <div class="auth-avatar-icon"><i class="fa-solid fa-user"></i></div>
+                    <h3>Bon retour !</h3>
+                    <p>Connectez-vous pour accéder à vos commandes et votre profil.</p>
+                </div>
+                <div class="form-group">
+                    <label>Téléphone ou E-mail</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="login-email" placeholder="Ex: 77 XXX XX XX ou email@mail.com" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="login-password" placeholder="Votre mot de passe" />
+                        <button class="toggle-password" onclick="togglePasswordVisibility('login-password', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <a href="#" class="forgot-password-link">Mot de passe oublié ?</a>
+                <button class="btn-auth-submit" onclick="handleLogin()">
+                    <i class="fa-solid fa-right-to-bracket"></i> Se connecter
+                </button>
+                <div class="auth-divider"><span>ou continuer avec</span></div>
+                <a href="https://wa.me/221XXXXXXXXX" class="btn-whatsapp-auth" target="_blank">
+                    <i class="fa-brands fa-whatsapp"></i> Connexion via WhatsApp
+                </a>
+            </div>
+            <div id="form-register" class="auth-form" style="display:none;">
+                <div class="auth-welcome">
+                    <div class="auth-avatar-icon"><i class="fa-solid fa-user-plus"></i></div>
+                    <h3>Créer un compte</h3>
+                    <p>Rejoignez Liv'Guinar+ et commandez en toute simplicité.</p>
+                </div>
+                <div class="form-group">
+                    <label>Prénom & Nom</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="reg-nom" placeholder="Ex: Fatou Diallo" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Numéro de téléphone</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-phone input-icon"></i>
+                        <input type="tel" id="reg-tel" placeholder="Ex: 77 XXX XX XX" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>E-mail (optionnel)</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="email" id="reg-email" placeholder="votre@email.com" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Adresse de livraison</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-location-dot input-icon"></i>
+                        <input type="text" id="reg-adresse" placeholder="Quartier, rue, point de repère..." />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="reg-password" placeholder="Minimum 6 caractères" />
+                        <button class="toggle-password" onclick="togglePasswordVisibility('reg-password', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn-auth-submit" onclick="handleRegister()">
+                    <i class="fa-solid fa-user-plus"></i> Créer mon compte
+                </button>
+            </div>
+        </div>
+        <div id="compte-profile-view" class="page-body" style="display:none;">
+            <div class="profile-header-card">
+                <div class="profile-avatar"><span id="profile-initials">FD</span></div>
+                <div class="profile-info">
+                    <h3 id="profile-name">Fatou Diallo</h3>
+                    <p id="profile-phone">77 XXX XX XX</p>
+                    <span class="profile-badge"><i class="fa-solid fa-star"></i> Client fidèle</span>
+                </div>
+            </div>
+            <p class="section-label-outside">MES COMMANDES</p>
+            <div class="order-item-card">
+                <div class="order-item-icon"><i class="fa-solid fa-box"></i></div>
+                <div class="order-item-info">
+                    <span class="order-item-id">#LG-2847</span>
+                    <span class="order-item-detail">Poulet Fermier 1.5kg · 5 250 FCFA</span>
+                    <span class="order-item-status status-delivered">Livré</span>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);"></i>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Se déconnecter
             </button>
         </div>
-    </section>
+    </div>
 
-    <section class="banners-section">
-        <div class="banners-list">
-            
-            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000');">
-                <div class="banner-content">
-                    <h2>🐔 Volaille</h2>
-                    <p class="product-count">3 produits disponibles</p>
-                    <p class="starting-price">À partir de 3 000 FCFA/kg</p>
-                </div>
-                <div class="banner-arrow">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </div>
-
-            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?q=80&w=1000');">
-                <div class="banner-content">
-                    <h2>🥚 Œufs</h2>
-                    <p class="product-count">2 produits disponibles</p>
-                    <p class="starting-price">À partir de 2 500 FCFA/plateau</p>
-                </div>
-                <div class="banner-arrow">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </div>
-
-            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('{{ url_for('static', filename='images/ladoum.jpg') }}');">
-                <div class="banner-content">
-                    <h2>🐑 Moutons</h2>
-                    <p class="product-count">2 produits disponibles</p>
-                    <p class="starting-price">À partir de 75 000 FCFA</p>
-                </div>
-                <div class="banner-arrow">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </div>
-
-            <div class="category-banner-card" style="background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?q=80&w=1000');">
-                <div class="banner-content">
-                    <h2>🐄 Vaches</h2>
-                    <p class="product-count">1 produit disponible</p>
-                    <p class="starting-price">À partir de 350 000 FCFA</p>
-                </div>
-                <div class="banner-arrow">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </div>
-
-        </div>
-    </section>
 
 </main>
 
+<!-- =====================================================
+     FOOTER NAVIGATION
+===================================================== -->
 <footer class="app-footer">
-    <button class="nav-item active">
+    <button class="nav-item active" id="btn-nav-accueil">
         <i class="fa-solid fa-house"></i>
         <span>Accueil</span>
     </button>
-        
-    <button class="nav-item">
-        <i class="fa-solid fa-shop"></i>
+    <button class="nav-item" id="btn-nav-boutique">
+        <i class="fa-solid fa-store"></i>
         <span>Boutique</span>
+        <span class="cart-badge-footer" id="cartBadgeFooter" style="display:none;">0</span>
     </button>
-        
-    <button class="nav-item">
+    <button class="nav-item" id="btn-nav-suivi">
         <i class="fa-solid fa-box"></i>
         <span>Suivi</span>
     </button>
-        
-    <button class="nav-item">
+    <button class="nav-item" id="btn-nav-assistant">
         <i class="fa-solid fa-microphone"></i>
         <span>Assistant</span>
     </button>
 </footer>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/shop.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

@@ -3,3 +3,5 @@ Flask-SocketIO==5.3.6
 eventlet==0.35.2
 mysql-connector-python==8.3.0
 cryptography==42.0.5
+google-genai
+bcrypt

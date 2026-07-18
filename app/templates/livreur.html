@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Espace Livreur · Liv'Guinar+</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root {
+            --green:  #0F4C3A;
+            --green2: #123524;
+            --orange: #FF9F43;
+            --red:    #e53935;
+            --bg:     #F5F3EE;
+            --white:  #FFFFFF;
+            --border: #E8E6E0;
+            --text:   #1A1A1A;
+            --muted:  #8E8E93;
+            --shadow: 0 2px 12px rgba(0,0,0,0.07);
+            --radius: 16px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        /* ── ÉCRANS ── */
+        .screen { display: none; min-height: 100vh; flex-direction: column; }
+        .screen.active { display: flex; }
+
+        /* ── SCREEN LOGIN ── */
+        #screenLogin {
+            background: linear-gradient(160deg, var(--green2) 0%, var(--green) 100%);
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .login-logo .logo-circle {
+            width: 80px; height: 80px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem;
+            margin: 0 auto 16px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .login-logo h1 { color: white; font-size: 1.6rem; font-weight: 800; }
+        .login-logo p  { color: rgba(255,255,255,0.65); font-size: 0.85rem; margin-top: 4px; }
+        .login-badge {
+            display: inline-block;
+            background: rgba(255,159,67,0.2);
+            border: 1px solid rgba(255,159,67,0.4);
+            color: var(--orange);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+
+        .login-card h2 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .login-card p {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 7px;
+            letter-spacing: 0.3px;
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrap i {
+            position: absolute;
+            left: 14px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .input-wrap input, .input-wrap select {
+            width: 100%;
+            padding: 13px 14px 13px 40px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            outline: none;
+            background: #fafaf8;
+            color: var(--text);
+            transition: border 0.2s;
+            appearance: none;
+        }
+
+        .input-wrap input:focus, .input-wrap select:focus {
+            border-color: var(--green);
+            background: white;
+        }
+
+        .pin-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .pin-inputs input {
+            width: 52px; height: 56px;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            outline: none;
+            background: #fafaf8;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .pin-inputs input:focus {
+            border-color: var(--green);
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .pin-inputs input.filled {
+            border-color: var(--green);
+            background: var(--green);
+            color: white;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(15,76,58,0.3);
+        }
+
+        .btn-login:hover   { background: var(--green2); transform: translateY(-1px); }
+        .btn-login:active  { transform: scale(0.98); }
+        .btn-login.loading { opacity: 0.7; pointer-events: none; }
+
+        .error-msg {
+            background: #FFF3F3;
+            border: 1px solid #FFCDD2;
+            color: var(--red);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-top: 12px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── SCREEN DASHBOARD ── */
+        #screenDashboard {
+            background: var(--bg);
+            flex-direction: column;
+        }
+
+        .dash-header {
+            background: var(--green);
+            padding: 20px 16px 16px;
+            color: white;
+        }
+
+        .dash-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .livreur-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .livreur-avatar {
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.25);
+            flex-shrink: 0;
+        }
+
+        .livreur-name { font-size: 1rem; font-weight: 700; }
+        .livreur-sub  { font-size: 0.75rem; opacity: 0.7; margin-top: 1px; }
+
+        .btn-deconnect {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-deconnect:hover { background: rgba(255,255,255,0.2); }
+
+        .gps-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 0.82rem;
+        }
+
+        .gps-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+            flex-shrink: 0;
+        }
+        .gps-dot.on  { background: #4CAF50; animation: pulse 1.5s infinite; }
+        .gps-dot.off { background: var(--orange); }
+        .gps-dot.err { background: var(--red); }
+
+        @keyframes pulse {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:0.5; transform:scale(1.4); }
+        }
+
+        .dash-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-body { padding: 16px; }
+
+        /* Commande card */
+        .commande-hero {
+            background: linear-gradient(135deg, var(--green2), var(--green));
+            border-radius: var(--radius);
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .commande-hero::after {
+            content: '📦';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            opacity: 0.15;
+        }
+
+        .commande-num {
+            font-size: 0.68rem;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            margin-bottom: 6px;
+        }
+
+        .commande-client {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .commande-adresse {
+            font-size: 0.82rem;
+            opacity: 0.75;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 16px;
+        }
+
+        .commande-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Carte mini */
+        #mapLivreur {
+            height: 220px;
+            width: 100%;
+        }
+
+        .map-actions {
+            display: flex;
+            gap: 10px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-maps {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--text);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-maps:hover { border-color: var(--green); color: var(--green); }
+        .btn-maps.google { color: #4285F4; }
+        .btn-maps.waze   { color: #33CCFF; }
+
+        /* Statut */
+        .statut-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 14px 16px;
+        }
+
+        .statut-option {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .statut-option.active {
+            border-color: var(--green);
+            background: #F0FAF5;
+        }
+
+        .statut-option:hover { border-color: var(--green); }
+
+        .statut-icon {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .statut-text strong {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .statut-text span {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .statut-check {
+            margin-left: auto;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: transparent;
+            flex-shrink: 0;
+        }
+
+        .statut-option.active .statut-check {
+            background: var(--green);
+            color: white;
+        }
+
+        /* GPS Toggle */
+        .gps-toggle-card { padding: 20px 16px; }
+
+        .btn-gps-start {
+            width: 100%;
+            padding: 16px;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(15,76,58,0.3);
+        }
+
+        .btn-gps-start.running {
+            background: var(--red);
+            box-shadow: 0 4px 16px rgba(229,57,53,0.3);
+        }
+
+        .btn-gps-start:active { transform: scale(0.98); }
+
+        .gps-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .gps-info-item { text-align: center; }
+        .gps-info-label { color: var(--muted); font-size: 0.7rem; margin-bottom: 3px; }
+        .gps-info-value { font-weight: 700; color: var(--text); }
+
+        /* Produits */
+        .produit-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .produit-line:last-child { border-bottom: none; }
+        .produit-qty {
+            background: var(--green);
+            color: white;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .produit-nom { flex: 1; }
+        .produit-prix { font-weight: 700; color: var(--green); }
+
+        .total-livraison {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: #F0FAF5;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--green);
+        }
+
+        /* Footer */
+        .dash-footer {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-confirmer {
+            width: 100%;
+            padding: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+        }
+
+        .btn-confirmer:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* ── SCREEN CONFIRMÉ ── */
+        #screenConfirme {
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
+            background: linear-gradient(160deg, #1B5E20, #2E7D32);
+        }
+
+        .confirme-content {
+            text-align: center;
+            color: white;
+        }
+
+        .confirme-icon {
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 24px;
+            border: 3px solid rgba(255,255,255,0.25);
+        }
+
+        .confirme-content h2 { font-size: 1.6rem; font-weight: 900; margin-bottom: 8px; }
+        .confirme-content p  { font-size: 0.9rem; opacity: 0.75; margin-bottom: 32px; }
+
+        .btn-nouvelle {
+            padding: 14px 32px;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-nouvelle:hover { background: rgba(255,255,255,0.25); }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     ÉCRAN 1 : CONNEXION LIVREUR
+════════════════════════════════════════ -->
+<div class="screen active" id="screenLogin">
+    <div class="login-logo">
+        <div class="logo-circle">🏍️</div>
+        <h1>Liv'Guinar+</h1>
+        <p>Espace Livreur · Interface GPS</p>
+        <span class="login-badge">LIVREUR CERTIFIÉ</span>
+    </div>
+
+    <div class="login-card">
+        <h2>Connexion livreur</h2>
+        <p>Entrez votre nom et le code PIN de la commande pour démarrer.</p>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-user" style="color:var(--green); margin-right:5px;"></i> Votre nom complet</label>
+            <div class="input-wrap">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="loginNom" placeholder="Ex: Moussa Diallo" autocomplete="name">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-hashtag" style="color:var(--green); margin-right:5px;"></i> Numéro de commande</label>
+            <div class="input-wrap">
+                <i class="fa-solid fa-box"></i>
+                <input type="text" id="loginCommande" placeholder="Ex: LG-2847" style="text-transform:uppercase;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-lock" style="color:var(--green); margin-right:5px;"></i> Code PIN (4 chiffres)</label>
+            <div class="pin-inputs">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-input" id="pin1">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-input" id="pin2">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-input" id="pin3">
+                <input type="password" maxlength="1" inputmode="numeric" class="pin-input" id="pin4">
+            </div>
+            <p style="font-size:0.72rem; color:var(--muted); text-align:center; margin-top:8px;">
+                Code PIN par défaut pour la démo : <strong>1234</strong>
+            </p>
+        </div>
+
+        <button class="btn-login" id="btnLogin" onclick="seConnecter()">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            Accéder à ma livraison
+        </button>
+
+        <div class="error-msg" id="loginError">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="loginErrorText">Code PIN incorrect.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ÉCRAN 2 : DASHBOARD LIVREUR
+════════════════════════════════════════ -->
+<div class="screen" id="screenDashboard">
+
+    <!-- Header -->
+    <div class="dash-header">
+        <div class="dash-header-top">
+            <div class="livreur-profile">
+                <div class="livreur-avatar" id="livreurInitiales">MD</div>
+                <div>
+                    <div class="livreur-name" id="livreurNomDisplay">Moussa Diallo</div>
+                    <div class="livreur-sub">Livreur certifié · Dakar</div>
+                </div>
+            </div>
+            <button class="btn-deconnect" onclick="seDeconnecter()">
+                <i class="fa-solid fa-right-from-bracket"></i> Quitter
+            </button>
+        </div>
+        <div class="gps-status-bar">
+            <div class="gps-dot" id="gpsDot"></div>
+            <span id="gpsStatusLabel">GPS en attente...</span>
+            <span style="margin-left:auto; font-size:0.72rem; opacity:0.7;" id="nbEnvoisLabel">0 envois</span>
+        </div>
+    </div>
+
+    <!-- Contenu -->
+    <div class="dash-body">
+
+        <!-- Commande hero -->
+        <div class="commande-hero" id="commandeHero">
+            <div class="commande-num">COMMANDE EN COURS</div>
+            <div class="commande-client" id="infoClient">Chargement...</div>
+            <div class="commande-adresse">
+                <i class="fa-solid fa-location-dot"></i>
+                <span id="infoAdresse">—</span>
+            </div>
+            <div class="commande-chips">
+                <span class="chip" id="infoNumero">#LG-2847</span>
+                <span class="chip" id="infoPaiement">💳 Espèces</span>
+                <span class="chip" id="infoTotal">— FCFA</span>
+            </div>
+        </div>
+
+        <!-- Mini carte avec destination -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-map" style="color:var(--green);"></i>
+                    Destination client
+                </div>
+                <span style="font-size:0.72rem; color:var(--muted);" id="distanceLabel">Calcul...</span>
+            </div>
+            <div id="mapLivreur"></div>
+            <div class="map-actions">
+                <a class="btn-maps google" id="btnGoogleMaps" href="#" target="_blank">
+                    <i class="fa-brands fa-google"></i> Google Maps
+                </a>
+                <a class="btn-maps waze" id="btnWaze" href="#" target="_blank">
+                    🗺️ Waze
+                </a>
+            </div>
+        </div>
+
+        <!-- GPS Toggle -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-satellite-dish" style="color:var(--orange);"></i>
+                    Partage de position GPS
+                </div>
+            </div>
+            <div class="gps-toggle-card">
+                <button class="btn-gps-start" id="btnGpsToggle" onclick="toggleGps()">
+                    <i class="fa-solid fa-location-dot" id="btnGpsIcon"></i>
+                    <span id="btnGpsText">Démarrer le partage GPS</span>
+                </button>
+                <div class="gps-info-row">
+                    <div class="gps-info-item">
+                        <div class="gps-info-label">LATITUDE</div>
+                        <div class="gps-info-value" id="gpsLat">—</div>
+                    </div>
+                    <div class="gps-info-item">
+                        <div class="gps-info-label">LONGITUDE</div>
+                        <div class="gps-info-value" id="gpsLon">—</div>
+                    </div>
+                    <div class="gps-info-item">
+                        <div class="gps-info-label">PRÉCISION</div>
+                        <div class="gps-info-value" id="gpsPrecision">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statut de livraison -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-clipboard-list" style="color:var(--green);"></i>
+                    Statut de la livraison
+                </div>
+            </div>
+            <div class="statut-options">
+                <div class="statut-option active" data-statut="en_route" onclick="changerStatut(this)">
+                    <div class="statut-icon" style="background:#FFF3E0;">🏍️</div>
+                    <div class="statut-text">
+                        <strong>En route</strong>
+                        <span>Je me dirige vers le client</span>
+                    </div>
+                    <div class="statut-check"><i class="fa-solid fa-check"></i></div>
+                </div>
+                <div class="statut-option" data-statut="arrive" onclick="changerStatut(this)">
+                    <div class="statut-icon" style="background:#E3F2FD;">📍</div>
+                    <div class="statut-text">
+                        <strong>Arrivé</strong>
+                        <span>Je suis devant l'adresse du client</span>
+                    </div>
+                    <div class="statut-check"><i class="fa-solid fa-check"></i></div>
+                </div>
+                <div class="statut-option" data-statut="livre" onclick="changerStatut(this)">
+                    <div class="statut-icon" style="background:#E8F5E9;">✅</div>
+                    <div class="statut-text">
+                        <strong>Livré</strong>
+                        <span>Commande remise au client</span>
+                    </div>
+                    <div class="statut-check"><i class="fa-solid fa-check"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produits à livrer -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-box-open" style="color:var(--green);"></i>
+                    Articles à livrer
+                </div>
+            </div>
+            <div id="listeProduits">
+                <div class="produit-line" style="color:var(--muted); justify-content:center;">
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>
+                    Chargement...
+                </div>
+            </div>
+            <div class="total-livraison">
+                <span>Total à encaisser</span>
+                <span id="totalEncaisser">— FCFA</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer fixe -->
+    <div class="dash-footer">
+        <button class="btn-confirmer" id="btnConfirmer" onclick="confirmerLivraison()" disabled>
+            <i class="fa-solid fa-qrcode"></i>
+            Confirmer la livraison (QR scanné)
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ÉCRAN 3 : LIVRAISON CONFIRMÉE
+════════════════════════════════════════ -->
+<div class="screen" id="screenConfirme">
+    <div class="confirme-content">
+        <div class="confirme-icon">✅</div>
+        <h2>Livraison confirmée !</h2>
+        <p>La commande a été remise avec succès.<br>Merci pour votre service.</p>
+        <button class="btn-nouvelle" onclick="nouvellelivraison()">
+            <i class="fa-solid fa-plus"></i> Nouvelle livraison
+        </button>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+// =========================================================================
+// 🔑 ÉTAT GLOBAL
+// =========================================================================
+const PIN_CORRECT = '1234'; // En production: vérifier côté serveur
+let state = {
+    nom:      '',
+    initiales:'',
+    commande: '',
+    statut:   'en_route',
+    gpsRunning: false,
+    watchId:  null,
+    socket:   null,
+    nbEnvois: 0,
+    latitude: null,
+    longitude: null,
+    mapLivreur: null,
+    destinationMarker: null,
+    posLivreurMarker: null,
+    // Coordonnées destination (Dakar Plateau par défaut)
+    destLat: 14.6652,
+    destLon: -17.4363,
+};
+
+// =========================================================================
+// 📌 PIN INPUTS — Navigation automatique
+// =========================================================================
+const pinInputs = document.querySelectorAll('.pin-input');
+pinInputs.forEach((input, idx) => {
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/[^0-9]/g, '');
+        input.classList.toggle('filled', input.value !== '');
+        if (input.value && idx < 3) pinInputs[idx + 1].focus();
+    });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && idx > 0) pinInputs[idx - 1].focus();
+    });
+});
+
+// =========================================================================
+// 🔐 CONNEXION
+// =========================================================================
+function seConnecter() {
+    const nom      = document.getElementById('loginNom').value.trim();
+    const commande = document.getElementById('loginCommande').value.trim().toUpperCase();
+    const pin      = [...pinInputs].map(i => i.value).join('');
+
+    const errEl  = document.getElementById('loginError');
+    const errTxt = document.getElementById('loginErrorText');
+
+    errEl.style.display = 'none';
+
+    if (!nom) {
+        errTxt.textContent = 'Veuillez entrer votre nom.';
+        errEl.style.display = 'flex'; return;
+    }
+    if (!commande || !commande.startsWith('LG-')) {
+        errTxt.textContent = 'Numéro de commande invalide (ex: LG-2847).';
+        errEl.style.display = 'flex'; return;
+    }
+    if (pin.length !== 4) {
+        errTxt.textContent = 'Veuillez entrer les 4 chiffres du code PIN.';
+        errEl.style.display = 'flex'; return;
+    }
+    if (pin !== PIN_CORRECT) {
+        errTxt.textContent = 'Code PIN incorrect. Contactez le superviseur.';
+        errEl.style.display = 'flex';
+        pinInputs.forEach(i => { i.value = ''; i.classList.remove('filled'); });
+        pinInputs[0].focus();
+        return;
+    }
+
+    // Tout bon
+    const mots = nom.split(' ');
+    state.nom       = nom;
+    state.initiales = mots.map(m => m[0]?.toUpperCase() || '').join('').slice(0, 2);
+    state.commande  = commande;
+
+    afficherEcran('screenDashboard');
+    initialiserDashboard();
+}
+
+// =========================================================================
+// 🚀 DASHBOARD
+// =========================================================================
+function initialiserDashboard() {
+    // Profil
+    document.getElementById('livreurInitiales').textContent  = state.initiales;
+    document.getElementById('livreurNomDisplay').textContent = state.nom;
+
+    // Charger les données de la commande
+    chargerCommande();
+
+    // Initialiser la mini carte
+    setTimeout(() => initMapLivreur(), 300);
+
+    // Connecter WebSocket
+    connecterSocket();
+}
+
+async function chargerCommande() {
+    try {
+        const res  = await fetch(`/api/suivi/${state.commande}`);
+        const data = await res.json();
+
+        if (!data.success) {
+            document.getElementById('infoClient').textContent = 'Commande introuvable';
+            return;
+        }
+
+        const c = data.commande;
+
+        document.getElementById('infoClient').textContent   = c.nom_client || 'Client';
+        document.getElementById('infoAdresse').textContent  = c.adresse    || 'Adresse non renseignée';
+        document.getElementById('infoNumero').textContent   = `#${c.numero}`;
+        document.getElementById('infoPaiement').textContent = `💳 ${c.mode_paiement === 'wave' ? 'Wave' : c.mode_paiement === 'orange_money' ? 'Orange Money' : 'Espèces'}`;
+        document.getElementById('infoTotal').textContent    = `${Number(c.total).toLocaleString('fr-FR')} FCFA`;
+        document.getElementById('totalEncaisser').textContent = `${Number(c.total).toLocaleString('fr-FR')} FCFA`;
+
+        // Liens Maps avec adresse
+        const adresseEncodee = encodeURIComponent((c.adresse || '') + ', Dakar, Sénégal');
+        document.getElementById('btnGoogleMaps').href = `https://www.google.com/maps/search/?api=1&query=${adresseEncodee}`;
+        document.getElementById('btnWaze').href       = `https://waze.com/ul?q=${adresseEncodee}&navigate=yes`;
+
+        // Produits
+        if (data.lignes && data.lignes.length > 0) {
+            document.getElementById('listeProduits').innerHTML = data.lignes.map(l => `
+                <div class="produit-line">
+                    <div class="produit-qty">${l.quantite}</div>
+                    <div class="produit-nom">${l.nom_produit} <span style="color:var(--muted);font-size:0.78rem;">(${l.poids_label})</span></div>
+                    <div class="produit-prix">${Number(l.total_ligne).toLocaleString('fr-FR')} F</div>
+                </div>
+            `).join('');
+        }
+
+    } catch(e) {
+        console.error('Erreur chargement commande:', e);
+        // Données démo
+        document.getElementById('infoClient').textContent  = 'Amadou Diop';
+        document.getElementById('infoAdresse').textContent = '12 Rue Carnot, Dakar Plateau';
+        document.getElementById('infoTotal').textContent   = '6 750 FCFA';
+        document.getElementById('totalEncaisser').textContent = '6 750 FCFA';
+        document.getElementById('listeProduits').innerHTML = `
+            <div class="produit-line">
+                <div class="produit-qty">1</div>
+                <div class="produit-nom">Poulet Fermier <span style="color:var(--muted);font-size:0.78rem;">(1,5 kg)</span></div>
+                <div class="produit-prix">5 250 F</div>
+            </div>
+            <div class="produit-line">
+                <div class="produit-qty">—</div>
+                <div class="produit-nom">Frais de livraison</div>
+                <div class="produit-prix">1 500 F</div>
+            </div>
+        `;
+    }
+}
+
+// =========================================================================
+// 🗺️ MINI CARTE LIVREUR
+// =========================================================================
+function initMapLivreur() {
+    const mapEl = document.getElementById('mapLivreur');
+    if (!mapEl || state.mapLivreur) return;
+
+    state.mapLivreur = L.map('mapLivreur', { zoomControl: true }).setView([state.destLat, state.destLon], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(state.mapLivreur);
+
+    // Marqueur destination
+    const destIcon = L.divIcon({
+        className: '',
+        html: `<div style="background:#e53935;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:1rem;">📍</div>`,
+        iconSize: [36,36], iconAnchor:[18,18]
+    });
+
+    state.destinationMarker = L.marker([state.destLat, state.destLon], { icon: destIcon })
+        .addTo(state.mapLivreur)
+        .bindPopup('<b>Adresse du client</b>');
+
+    // Marqueur livreur (position initiale = départ itinéraire)
+    const livreurIcon = L.divIcon({
+        className: '',
+        html: `<div style="background:var(--green,#0F4C3A);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:1.2rem;">🏍️</div>`,
+        iconSize: [40,40], iconAnchor:[20,20]
+    });
+
+    state.posLivreurMarker = L.marker([14.6815, -17.4675], { icon: livreurIcon })
+        .addTo(state.mapLivreur)
+        .bindPopup(`<b>${state.nom}</b><br>Ma position`);
+
+    document.getElementById('distanceLabel').textContent = 'Dakar Plateau';
+}
+
+// =========================================================================
+// 📡 GPS
+// =========================================================================
+function toggleGps() {
+    if (state.gpsRunning) arreterGps();
+    else demarrerGps();
+}
+
+function demarrerGps() {
+    if (!navigator.geolocation) {
+        alert('GPS non disponible sur cet appareil.');
+        return;
+    }
+
+    state.watchId = navigator.geolocation.watchPosition(
+        onPositionUpdate,
+        onPositionError,
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+
+    state.gpsRunning = true;
+    document.getElementById('btnGpsToggle').classList.add('running');
+    document.getElementById('btnGpsText').textContent = '⏹ Arrêter le partage GPS';
+    document.getElementById('btnGpsIcon').className   = 'fa-solid fa-stop';
+    document.getElementById('gpsDot').className       = 'gps-dot on';
+    document.getElementById('gpsStatusLabel').textContent = 'Localisation active';
+}
+
+function arreterGps() {
+    if (state.watchId !== null) {
+        navigator.geolocation.clearWatch(state.watchId);
+        state.watchId = null;
+    }
+    state.gpsRunning = false;
+    document.getElementById('btnGpsToggle').classList.remove('running');
+    document.getElementById('btnGpsText').textContent = 'Démarrer le partage GPS';
+    document.getElementById('btnGpsIcon').className   = 'fa-solid fa-location-dot';
+    document.getElementById('gpsDot').className       = 'gps-dot off';
+    document.getElementById('gpsStatusLabel').textContent = 'GPS arrêté';
+}
+
+function onPositionUpdate(pos) {
+    const { latitude, longitude, accuracy } = pos.coords;
+    state.latitude  = latitude;
+    state.longitude = longitude;
+
+    // Afficher
+    document.getElementById('gpsLat').textContent       = latitude.toFixed(5);
+    document.getElementById('gpsLon').textContent       = longitude.toFixed(5);
+    document.getElementById('gpsPrecision').textContent = `±${Math.round(accuracy)}m`;
+
+    // Bouger marqueur livreur sur la carte
+    if (state.posLivreurMarker) {
+        state.posLivreurMarker.setLatLng([latitude, longitude]);
+        state.mapLivreur?.panTo([latitude, longitude], { animate: true });
+    }
+
+    // Envoyer via WebSocket
+    if (state.socket && state.socket.connected) {
+        state.socket.emit('update_delivery_location', {
+            commande:  state.commande,
+            livreur:   state.nom,
+            latitude,
+            longitude,
+            precision: accuracy,
+            statut:    state.statut,
+            timestamp: Date.now()
+        });
+        state.nbEnvois++;
+        document.getElementById('nbEnvoisLabel').textContent = `${state.nbEnvois} envois`;
+        document.getElementById('gpsStatusLabel').textContent = `GPS actif · Envoi #${state.nbEnvois}`;
+    }
+}
+
+function onPositionError(err) {
+    document.getElementById('gpsDot').className = 'gps-dot err';
+    document.getElementById('gpsStatusLabel').textContent = `Erreur GPS: ${err.message}`;
+}
+
+// =========================================================================
+// 📋 STATUT
+// =========================================================================
+function changerStatut(el) {
+    document.querySelectorAll('.statut-option').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    state.statut = el.dataset.statut;
+
+    // Activer bouton confirmer si "livré"
+    document.getElementById('btnConfirmer').disabled = (state.statut !== 'livre');
+
+    // Envoyer update statut via WebSocket
+    if (state.socket && state.socket.connected && state.latitude) {
+        state.socket.emit('update_delivery_location', {
+            commande:  state.commande,
+            livreur:   state.nom,
+            latitude:  state.latitude,
+            longitude: state.longitude,
+            statut:    state.statut,
+            timestamp: Date.now()
+        });
+    }
+}
+
+// =========================================================================
+// 🔌 WEBSOCKET
+// =========================================================================
+function connecterSocket() {
+    if (typeof io === 'undefined') return;
+
+    state.socket = io(window.location.origin, {
+        transports: ['websocket', 'polling']
+    });
+
+    state.socket.on('connect', () => {
+        document.getElementById('gpsStatusLabel').textContent = 'Connecté au serveur';
+        console.log('✅ WebSocket connecté');
+    });
+
+    state.socket.on('disconnect', () => {
+        document.getElementById('gpsDot').className = 'gps-dot err';
+        document.getElementById('gpsStatusLabel').textContent = 'Déconnecté du serveur';
+    });
+}
+
+// =========================================================================
+// ✅ CONFIRMER LIVRAISON
+// =========================================================================
+function confirmerLivraison() {
+    arreterGps();
+    if (state.socket) state.socket.disconnect();
+    afficherEcran('screenConfirme');
+}
+
+function nouvellelivraison() {
+    state = { ...state, commande:'', statut:'en_route', gpsRunning:false, watchId:null, nbEnvois:0, latitude:null, longitude:null, mapLivreur:null };
+    document.getElementById('loginNom').value = '';
+    document.getElementById('loginCommande').value = '';
+    pinInputs.forEach(i => { i.value=''; i.classList.remove('filled'); });
+    afficherEcran('screenLogin');
+}
+
+function seDeconnecter() {
+    arreterGps();
+    if (state.socket) state.socket.disconnect();
+    nouvellelivraison();
+}
+
+// =========================================================================
+// 🖥️ NAVIGATION ÉCRANS
+// =========================================================================
+function afficherEcran(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// Enter sur les champs
+document.getElementById('loginCommande').addEventListener('keydown', e => {
+    if (e.key === 'Enter') pinInputs[0].focus();
+});
+</script>
+</body>
+</html>

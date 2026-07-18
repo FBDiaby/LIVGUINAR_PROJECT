@@ -35,6 +35,10 @@ services:
     environment:
       - FLASK_ENV=development
       - DATABASE_URL=mysql+pymysql://root:Eternel@Fall76@db/livguinar_db
+      - GEMINI_API_KEY=AQ.Ab8RN6LRySGm7VpSFTPj4rkTjZg-rgAutKAJFFPSmHT77qmm4Q
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=Eternel@Fall76
+      - MYSQL_DATABASE=livguinar_db
     volumes:
       - ./app:/app
     networks:

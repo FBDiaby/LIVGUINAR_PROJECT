@@ -6,69 +6,101 @@
     <title>Assistant Liv'Guinar+</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assistant.css') }}">
 </head>
-<body style="background-color: #FDFBF7;">
+<body>
 
-    <header class="app-header" style="padding-bottom: 15px;">
-        <div class="header-top">
-            <button class="icon-btn" onclick="window.location.href='/'">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
+<!-- =====================================================
+     HEADER ASSISTANT
+===================================================== -->
+<header class="app-header assistant-header">
+    <div class="header-top">
+        <button class="icon-btn" onclick="window.location.href='/'" aria-label="Retour">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="assistant-brand">
+            <div class="assistant-avatar-header">
+                <i class="fa-solid fa-star"></i>
+            </div>
             <div class="brand-title">
                 <h1>Assistant LivGuinar+</h1>
-                <span class="sub-welcome" style="opacity: 0.9;">Wolof • Sérère • Français</span>
+                <span class="sub-welcome">Wolof · Sérère · Français</span>
             </div>
-            <div style="width: 24px;"></div> </div>
-
-        <div style="display: flex; gap: 8px; padding: 5px 20px 0 20px;">
-            <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">SN Wolof</span>
-            <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">SN Sérère</span>
-            <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">FR Français</span>
+            <span class="online-badge">
+                <span class="online-dot"></span> En ligne
+            </span>
         </div>
-    </header>
+        <div style="width:36px;"></div>
+    </div>
 
-    <main class="main-content" id="chat-container" style="margin-bottom: 90px; min-height: calc(100vh - 190px); overflow-y: auto;">
-        
-        <div class="chat-bubble-wrapper bot">
-            <div class="bot-avatar">
-                <i class="fa-solid fa-sparkles"></i>
-            </div>
-            <div class="chat-bubble">
-                <p>Bonjour ! Je suis votre assistant Liv'Guinar+. Parlez-moi en Wolof, Sérère ou Français — je comprends les trois. Comment puis-je vous aider ?</p>
-                <span class="chat-time">En ligne</span>
-            </div>
+    <div class="lang-chips-row">
+        <span class="lang-chip active" data-lang="wolof">SN Wolof</span>
+        <span class="lang-chip" data-lang="serere">SN Sérère</span>
+        <span class="lang-chip" data-lang="francais">FR Français</span>
+    </div>
+</header>
+
+<!-- =====================================================
+     ZONE DE CHAT
+===================================================== -->
+<main class="chat-main" id="chatContainer">
+
+    <!-- Message de bienvenue (bot) -->
+    <div class="chat-bubble-wrapper bot">
+        <div class="bot-avatar-bubble">
+            <i class="fa-solid fa-star"></i>
         </div>
-
-    </main>
-
-    <div class="chat-input-container">
-        <div class="chat-input-box">
-            <input type="text" id="text-input" placeholder="Appuyez sur le micro pour parler ou écrivez ici...">
-            <button class="voice-trigger-btn" id="mic-btn">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
+        <div class="chat-bubble bot-bubble">
+            <p>Bonjour ! Je suis votre assistant Liv'Guinar+. Parlez-moi en Wolof, Sérère ou Français — je comprends les trois. Comment puis-je vous aider ?</p>
+            <span class="chat-time">14h02</span>
         </div>
     </div>
 
-    <footer class="app-footer">
-        <button class="nav-item" onclick="window.location.href='/'">
-            <i class="fa-solid fa-house"></i>
-            <span>Accueil</span>
-        </button>
-        <button class="nav-item">
-            <i class="fa-solid fa-store"></i>
-            <span>Boutique</span>
-        </button>
-        <button class="nav-item">
-            <i class="fa-solid fa-map-location-dot"></i>
-            <span>Suivi</span>
-        </button>
-        <button class="nav-item active">
-            <i class="fa-solid fa-microphone"></i>
-            <span>Assistant</span>
-        </button>
-    </footer>
+</main>
 
-    <script src="{{ url_for('static', filename='js/assistant-chat.js') }}"></script>
+<!-- =====================================================
+     BARRE D'ENTRÉE (texte + micro)
+===================================================== -->
+<div class="chat-input-container">
+    <div class="chat-input-box">
+        <input
+            type="text"
+            id="textInput"
+            placeholder="Appuyez sur le micro pour parler ou écrivez ici..."
+            autocomplete="off"
+            aria-label="Message"
+        >
+        <button class="send-text-btn" id="sendTextBtn" aria-label="Envoyer">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+    <button class="voice-trigger-btn" id="micBtn" aria-label="Microphone">
+        <i class="fa-solid fa-microphone"></i>
+    </button>
+</div>
+
+<!-- =====================================================
+     FOOTER NAVIGATION
+===================================================== -->
+<footer class="app-footer">
+    <button class="nav-item" onclick="window.location.href='/'">
+        <i class="fa-solid fa-house"></i>
+        <span>Accueil</span>
+    </button>
+    <button class="nav-item" onclick="window.location.href='/?page=boutique'">
+        <i class="fa-solid fa-store"></i>
+        <span>Boutique</span>
+    </button>
+    <button class="nav-item" onclick="window.location.href='/?page=suivi'">
+        <i class="fa-solid fa-box"></i>
+        <span>Suivi</span>
+    </button>
+    <button class="nav-item active">
+        <i class="fa-solid fa-microphone"></i>
+        <span>Assistant</span>
+    </button>
+</footer>
+
+<script src="{{ url_for('static', filename='js/assistant-chat.js') }}"></script>
 </body>
 </html>
