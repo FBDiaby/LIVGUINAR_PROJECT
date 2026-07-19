@@ -28,17 +28,18 @@ services:
       - app
 
   # 🐍 L'APPLICATION BACKEND FLASK & WEBSOCKETS (Passerelle Réseau)
+# 🐍 L'APPLICATION BACKEND FLASK & WEBSOCKETS (Passerelle Réseau)
   app:
     build: ./app
     container_name: livguinar_backend_app
     restart: always
     environment:
-      - FLASK_ENV=development
-      - DATABASE_URL=mysql+pymysql://root:Eternel@Fall76@db/livguinar_db
-      - GEMINI_API_KEY=AQ.Ab8RN6LRySGm7VpSFTPj4rkTjZg-rgAutKAJFFPSmHT77qmm4Q
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=Eternel@Fall76
-      - MYSQL_DATABASE=livguinar_db
+      - FLASK_ENV=${FLASK_ENV}
+      - DATABASE_URL=mysql+pymysql://root:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOST}/${MYSQL_DATABASE}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
     volumes:
       - ./app:/app
     networks:
@@ -53,12 +54,12 @@ services:
     container_name: livguinar_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: Eternel@Fall76
-      MYSQL_DATABASE: livguinar_db
-      MYSQL_USER: FBD
-      MYSQL_PASSWORD: Eternel@Fall76
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - livguinar_backend
+      - livguinar_backend  

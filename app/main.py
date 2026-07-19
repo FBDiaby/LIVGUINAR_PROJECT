@@ -5,7 +5,19 @@ import bcrypt
 import os
 import uuid
 
+from routes.produits import produits_bp
+from routes.categories import categories_bp
+from routes.utilisateurs import utilisateurs_bp
+from routes.clients import clients_bp
+from routes.commandes import commandes_bp
+from routes.declinaisons_poids import declinaisons_bp
+from routes.lignes_commande import lignes_bp
+from routes.panier import panier_bp
+from routes.panier_items import panier_items_bp
+from routes.validation import validation_bp
+
 app = Flask(__name__)
+<<<<<<< HEAD
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'srt_secret_key_livguinar_2026')
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 
@@ -19,9 +31,28 @@ def get_db_connection():
         port=3306,
         connection_timeout=10
     )
+=======
+
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'test')
+
+app.register_blueprint(produits_bp)
+app.register_blueprint(categories_bp)
+app.register_blueprint(utilisateurs_bp)
+app.register_blueprint(clients_bp)
+app.register_blueprint(commandes_bp)
+app.register_blueprint(declinaisons_bp)
+app.register_blueprint(lignes_bp)
+app.register_blueprint(panier_bp)
+app.register_blueprint(panier_items_bp)
+app.register_blueprint(validation_bp)
+
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+>>>>>>> 97d94192b9320c5ef8b630c29512fa8c5230bb24
 
 # ── PAGE PRINCIPALE ──────────────────────────────────────────────────────
 @app.route('/')
+<<<<<<< HEAD
 def index():
     return render_template('index.html')
 
@@ -415,3 +446,11 @@ def process_voice_command():
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=os.environ.get('FLASK_ENV') == 'development')
+=======
+def home():
+    return jsonify({"status": "OK API LIVGUINAR"})
+
+
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+>>>>>>> 97d94192b9320c5ef8b630c29512fa8c5230bb24

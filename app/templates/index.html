@@ -10,6 +10,30 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
+<script>
+async function loadProduits() {
+    const res = await fetch('/api/produits');
+    const produits = await res.json();
+
+    console.log(produits);
+
+    const container = document.querySelector('.banners-list');
+    container.innerHTML = '';
+
+    produits.forEach(p => {
+        container.innerHTML += `
+            <div class="category-banner-card">
+                <div class="banner-content">
+                    <h2>${p.nom_produit}</h2>
+                    <p>${p.description}</p>
+                </div>
+            </div>
+        `;
+    });
+}
+
+loadProduits();
+</script>
 <body>
 
 <!-- =====================================================
