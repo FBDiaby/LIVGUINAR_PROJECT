@@ -749,5 +749,166 @@ function retourAccueil() {
     window.location.href = '/';
 }
 </script>
+<!-- =====================================================
+     AUTO-REMPLISSAGE + LOCALISATION — À ajouter avant </body>
+===================================================== -->
+<script>
+// ── Pré-remplir nom et téléphone depuis la session ──────────────────────
+async function preRemplirFormulaire() {
+    try {
+        const res  = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (!data.logged_in) return;
+
+        const user = data.user;
+
+        // Remplir nom complet
+        const nomInput = document.getElementById('nom_complet') ||
+                         document.querySelector('input[name="nom_complet"]') ||
+                         document.querySelector('input[placeholder*="Amadou"]') ||
+                         document.querySelector('input[placeholder*="nom"]');
+        if (nomInput && user.nom) {
+            nomInput.value = user.nom;
+            nomInput.style.borderColor = '#0F4C3A';
+        }
+
+        // Remplir téléphone
+        const telInput = document.getElementById('telephone') ||
+                         document.querySelector('input[name="telephone"]') ||
+                         document.querySelector('input[type="tel"]') ||
+                         document.querySelector('input[placeholder*="77"]');
+        if (telInput && user.telephone) {
+            telInput.value = user.telephone;
+            telInput.style.borderColor = '#0F4C3A';
+        }
+
+        // Afficher badge connecté si possible
+        const formCard = nomInput?.closest('.form-card') || nomInput?.closest('.card') || nomInput?.closest('form');
+        if (formCard && !document.getElementById('badge-connecte')) {
+            const badge = document.createElement('div');
+            badge.id = 'badge-connecte';
+            badge.style.cssText = 'background:#f0faf4;border:1px solid #c8e6d0;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:0.82rem;color:#0F4C3A;font-weight:600;';
+            badge.innerHTML = '<i class="fa-solid fa-circle-check" style="color:#0F4C3A;"></i> Connecté en tant que ' + user.nom;
+            formCard.insertBefore(badge, formCard.firstChild);
+        }
+    } catch(e) {
+        console.log('Session non disponible');
+    }
+}
+
+// ── Bouton Me Localiser ──────────────────────────────────────────────────
+function ajouterBoutonLocaliser() {
+    // Chercher le champ adresse
+    const adresseInput = document.getElementById('adresse') ||
+                         document.getElementById('adresse_livraison') ||
+                         document.querySelector('input[name="adresse"]') ||
+                         document.querySelector('input[placeholder*="Rue"]') ||
+                         document.querySelector('input[placeholder*="Médina"]') ||
+                         document.querySelector('input[placeholder*="adresse"]');
+
+    if (!adresseInput || document.getElementById('btn-me-localiser')) return;
+
+    // Créer le bouton
+    const btn = document.createElement('button');
+    btn.id = 'btn-me-localiser';
+    btn.type = 'button';
+    btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Me localiser automatiquement';
+    btn.style.cssText = `
+        width: 100%;
+        margin-top: 8px;
+        padding: 11px 16px;
+        background: #f0faf4;
+        border: 1.5px solid #c8e6d0;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #0F4C3A;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+        font-family: inherit;
+    `;
+
+    // Insérer après le champ adresse
+    adresseInput.parentNode.insertBefore(btn, adresseInput.nextSibling);
+
+    // Gérer le clic
+    btn.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            alert('La géolocalisation n\'est pas disponible sur ce navigateur.');
+            return;
+        }
+
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Localisation en cours...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                // Essayer de récupérer l'adresse via reverse geocoding
+                try {
+                    const geoRes = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr`
+                    );
+                    const geoData = await geoRes.json();
+                    const adresse = geoData.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+                    // Remplir le champ adresse
+                    adresseInput.value = adresse;
+                    adresseInput.style.borderColor = '#0F4C3A';
+
+                    // Mettre à jour le marqueur sur la carte si elle existe
+                    if (window.deliveryMarker && window.deliveryMarker.setLatLng) {
+                        window.deliveryMarker.setLatLng([lat, lng]);
+                        if (window.deliveryMap) window.deliveryMap.setView([lat, lng], 16);
+                    }
+
+                    // Sauvegarder les coords GPS
+                    window._gpsCoords = { lat, lng };
+
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Position enregistrée !';
+                    btn.style.background = '#e8f8f0';
+                    btn.style.borderColor = '#0F4C3A';
+                    btn.style.opacity = '1';
+
+                } catch(e) {
+                    // Fallback si reverse geocoding échoue
+                    adresseInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)} (GPS)`;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Position GPS enregistrée';
+                    btn.style.opacity = '1';
+                }
+            },
+            (err) => {
+                btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Me localiser automatiquement';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                alert('Impossible de vous localiser. Vérifiez les permissions de localisation.');
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    });
+}
+
+// ── Initialisation au chargement ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    preRemplirFormulaire();
+
+    // Attendre que le DOM soit prêt pour le bouton localiser
+    setTimeout(ajouterBoutonLocaliser, 500);
+
+    // Observer si la page change (steps) et réappliquer
+    const observer = new MutationObserver(() => {
+        ajouterBoutonLocaliser();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+</script>
+
 </body>
 </html>

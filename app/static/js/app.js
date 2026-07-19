@@ -1110,5 +1110,106 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.mettreAJourBadgesPanier === 'function') window.mettreAJourBadgesPanier();
     }
 
+    // =========================================================================
+    // 📦 DÉTAIL PRODUIT
+    // =========================================================================
+    window.afficherDetail = function(prodId) {
+        const produit = (window.PRODUITS || []).find(p => p.id === prodId);
+        if (!produit) return;
+
+        const container = document.getElementById('detailContainer');
+        if (!container) return;
+
+        const poidsDefaut = produit.poidsDefaut || 0;
+        const poidsActif  = produit.poids[poidsDefaut] || produit.poids[0];
+
+        container.innerHTML = `
+            <div class="detail-header">
+                <img src="${produit.image}" alt="${produit.nom}"
+                     onerror="this.src='/static/images/ladoum.jpg'" class="detail-img">
+                ${produit.badge ? `<span class="badge-popular">${produit.badge}</span>` : ''}
+                <button class="detail-back-btn" onclick="history.back()">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+            </div>
+            <div class="detail-body">
+                <div class="detail-top-row">
+                    <h2 class="detail-nom">${produit.nom}</h2>
+                    <span class="detail-prix" id="detailPrix">${window.formatPrix ? window.formatPrix(poidsActif.prix) : poidsActif.prix + ' FCFA'}</span>
+                </div>
+                <div class="detail-rating">
+                    <span class="stars" style="color:#E07B2A;">${window.renderStars ? window.renderStars(produit.note) : '★★★★★'}</span>
+                    <span class="reviews-count">${produit.note} · ${produit.avis} avis</span>
+                </div>
+                <p class="detail-desc">${produit.description}</p>
+
+                <p class="detail-section-label">CHOISIR LE POIDS</p>
+                <div class="detail-poids-list" id="detailPoidsList">
+                    ${produit.poids.map((p, i) => `
+                        <button class="detail-poids-btn ${i === poidsDefaut ? 'active' : ''}" data-idx="${i}">
+                            <span class="poids-label">${p.label}</span>
+                            <span class="poids-prix">${window.formatPrix ? window.formatPrix(p.prix) : p.prix + ' FCFA'}</span>
+                        </button>
+                    `).join('')}
+                </div>
+
+                <p class="detail-section-label">QUANTITÉ</p>
+                <div class="detail-qty-row">
+                    <button class="qty-btn" id="detailQtyMinus">−</button>
+                    <span class="qty-val" id="detailQty">1</span>
+                    <button class="qty-btn" id="detailQtyPlus">+</button>
+                </div>
+
+                <button class="btn-ajouter-detail" id="detailAddBtn">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    Ajouter au panier · <span id="detailPrixTotal">${window.formatPrix ? window.formatPrix(poidsActif.prix) : poidsActif.prix + ' FCFA'}</span>
+                </button>
+            </div>
+        `;
+
+        let qtyActuelle   = 1;
+        let poidsIdxActif = poidsDefaut;
+
+        // Sélection du poids
+        container.querySelectorAll('.detail-poids-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                container.querySelectorAll('.detail-poids-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                poidsIdxActif = parseInt(btn.dataset.idx);
+                const p = produit.poids[poidsIdxActif];
+                const prixEl      = document.getElementById('detailPrix');
+                const prixTotalEl = document.getElementById('detailPrixTotal');
+                if (prixEl && window.formatPrix)      prixEl.textContent      = window.formatPrix(p.prix);
+                if (prixTotalEl && window.formatPrix) prixTotalEl.textContent = window.formatPrix(p.prix * qtyActuelle);
+            });
+        });
+
+        // Quantité
+        document.getElementById('detailQtyMinus')?.addEventListener('click', () => {
+            if (qtyActuelle > 1) {
+                qtyActuelle--;
+                document.getElementById('detailQty').textContent = qtyActuelle;
+                const p = produit.poids[poidsIdxActif];
+                const prixTotalEl = document.getElementById('detailPrixTotal');
+                if (prixTotalEl && window.formatPrix) prixTotalEl.textContent = window.formatPrix(p.prix * qtyActuelle);
+            }
+        });
+        document.getElementById('detailQtyPlus')?.addEventListener('click', () => {
+            qtyActuelle++;
+            document.getElementById('detailQty').textContent = qtyActuelle;
+            const p = produit.poids[poidsIdxActif];
+            const prixTotalEl = document.getElementById('detailPrixTotal');
+            if (prixTotalEl && window.formatPrix) prixTotalEl.textContent = window.formatPrix(p.prix * qtyActuelle);
+        });
+
+        // Ajouter au panier
+        document.getElementById('detailAddBtn')?.addEventListener('click', () => {
+            if (window.ajouterAuPanier) window.ajouterAuPanier(produit.id, poidsIdxActif, qtyActuelle);
+            if (window.afficherToast)   window.afficherToast(`🛒 ${produit.nom} ajouté au panier !`);
+        });
+
+        // Afficher la section détail
+        if (window.activerSection) window.activerSection('detail', { titre: produit.nom });
+    };
     init();
 });
